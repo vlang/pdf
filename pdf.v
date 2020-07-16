@@ -13,8 +13,8 @@ module pdf
 * TODO: 
 **********************************************************************/
 import strings
-import os
-import math
+//import os
+//import math
 
 /**********************************************************************
 *
@@ -681,22 +681,27 @@ ET
 "
 }
 
+// calc_word_spacing calculate the sapcing to add to the space char 0x20 to fill the row only if txt fill al least half of teh horizontal space of the box.w
 pub
 fn (pg Page) calc_word_spacing(txt string, in_box Box, in_params Text_params) f32 {
 	mut params := in_params 
 	mut tmp_width, _, _ := pg.calc_string_bb(txt, in_params)
-	delta_w := f32(0.1)
-	params.word_spacing = 0.0
-	for tmp_width < in_box.w && (tmp_width > in_box.w / 2) {
-		params.word_spacing += delta_w
-		tmp_width, _, _ = pg.calc_string_bb(txt, params)
+	
+	// if the width is less then the half do not calculate space
+	if tmp_width <= (in_box.w / 2) {
+		return params.word_spacing
 	}
-	if params.word_spacing > 0.0 { params.word_spacing -= delta_w }
-	return params.word_spacing
+
+	n_space := txt.count(" ")
+	if n_space <= 0 {
+		return params.word_spacing
+	}
+	return (in_box.w - tmp_width) / n_space
 }
 
+// text_box draw a text inside a box, return true if the text fit in teh box, otherwise false and the leftover text
 pub
-fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) bool {
+fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, string) {
 	mut params := in_params
 
 	mut box := in_box
@@ -709,93 +714,67 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) bool {
 	// align flag multiplier
 	right_align := if params.text_align == .right { 1 } else { 0 }
 
-
-
 	mut y := box.y + row_height
 	rows := txt.split_into_lines()
-	for row in rows {
+	for c,row in rows {
 		mut tmp_row := row
-		mut done := false
-		for !done {
-			mut tmp_width, _, _ := pg.calc_string_bb(tmp_row, params)
-			
-			//----- center alligned -----
-			if params.text_align == .center {
-				if tmp_width <= box.w {
-					tmp_ws := params.word_spacing
-					params.word_spacing = pg.calc_word_spacing(tmp_row, box, params)
-					pg.push_content( pg.draw_base_text(tmp_row, box.x, y, params) )
-					params.word_spacing = tmp_ws
-					y += row_height
-					if y > (box.y + box.h) {
-						println("Too much text!")
-						return false
-					}
-				} else {
-					mut words_list := row.split(" ")
-					mut l := words_list.len
-					for l > 0 {
-						tmp_txt := words_list[..l].join(" ").trim_space()
-						tmp_width, _, _ = pg.calc_string_bb(tmp_txt, params)
-						if tmp_width < box.w {
-							//println("add row: ${tmp_txt}")
-							tmp_ws := params.word_spacing
-							params.word_spacing = pg.calc_word_spacing(tmp_txt, box, params)
-							pg.push_content( pg.draw_base_text(tmp_txt, box.x, y, params) )
-							params.word_spacing = tmp_ws
-							y += row_height
-							if y > (box.y + box.h) {
-								println("Too much text!")
-								return false
-							}
-							words_list = words_list[l..]
-							l = words_list.len
-							continue
-						}
-						l--
-					}
-				}
-				done = true
-			} else 
-			
-			//----- left,right alligned -----
-			if params.text_align in [.right, .left] {
+		mut tmp_width, _, _ := pg.calc_string_bb(tmp_row, params)
 
-				if tmp_width <= box.w {
-					pg.push_content( pg.draw_base_text(tmp_row, box.x + (box.w - tmp_width) * right_align, y, params) )
+		// the row is shorter than the box width 
+		if tmp_width <= box.w {
+			if params.text_align == . center {
+				tmp_ws := params.word_spacing
+				params.word_spacing = pg.calc_word_spacing(tmp_row, box, params)
+				pg.push_content( pg.draw_base_text(tmp_row, box.x, y, params) )
+				params.word_spacing = tmp_ws
+			} else {
+				pg.push_content( pg.draw_base_text(tmp_row, box.x + (box.w - tmp_width) * right_align, y, params) )
+			}
+			y += row_height
+			if y > (box.y + box.h) {
+				if c+1 == rows.len {
+					return true, ""
+				}
+				println("Too much text! [FL]")
+				leftover_text := rows[c+1..].join("\n")
+				return false, leftover_text
+			}
+		 
+		// the row is longer than the box width, we need to cut it 
+		}else {
+			mut words_list := row.split(" ")
+			mut l := words_list.len
+			for l > 0 {
+				tmp_txt := words_list[..l].join(" ").trim_space()
+				tmp_width, _, _ = pg.calc_string_bb(tmp_txt, params)
+				if tmp_width < box.w {
+					if params.text_align == .center {
+						tmp_ws := params.word_spacing
+						params.word_spacing = pg.calc_word_spacing(tmp_txt, box, params)
+						pg.push_content( pg.draw_base_text(tmp_txt, box.x, y, params) )
+						params.word_spacing = tmp_ws
+					} else {
+						pg.push_content( pg.draw_base_text(tmp_txt, box.x + (box.w - tmp_width) * right_align, y, params) )
+					}
 					y += row_height
 					if y > (box.y + box.h) {
-						println("Too much text!")
-						return false
-					}
-				} else {
-					mut words_list := row.split(" ")
-					mut l := words_list.len
-					for l > 0 {
-						tmp_txt := words_list[..l].join(" ").trim_space()
-						tmp_width, _, _ = pg.calc_string_bb(tmp_txt, params)
-						if tmp_width < box.w {
-							//println("add row: ${tmp_txt}")
-							//if tmp_txt[0].is_space() { tmp_txt = tmp_txt[1..]}
-							pg.push_content( pg.draw_base_text(tmp_txt, box.x + (box.w - tmp_width) * right_align, y, params) )
-							y += row_height
-							if y > (box.y + box.h) {
-								println("Too much text!")
-								return false
-							} 
-							words_list = words_list[l..]
-							l = words_list.len
-							continue
+						if c+1 == rows.len {
+							return true, ""
 						}
-						l--
-					}
+						println("Too much text! [CL]")
+						leftover_text := words_list[l..].join(" ").trim_space()+"\n"+rows[c+1..].join("\n")
+						return false, leftover_text
+					} 
+					words_list = words_list[l..]
+					l = words_list.len
+					continue
 				}
-				done = true
+				l--
 			}
 		}
 	}
-	// all teh text fitted
-	return true
+	// all the text fitted
+	return true, ""
 }
 
 /******************************************************************************
