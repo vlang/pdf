@@ -22,8 +22,6 @@ import strings
 * url: https://github.com/richgel999/miniz/
 *
 **********************************************************************/
-//#flag -Iminiz
-//#flag -I @VROOT/thirdparty/miniz2.1
 #flag -I @VROOT/miniz2.1
 #include "miniz.c"
 #include "miniz.h"
@@ -50,7 +48,7 @@ pub mut:
 	parts  []string          // list of all parts, these are before the txt field
 	txt string       = ""    // raw source content, it is used after the parts
 	raw_data  []byte
-	//res string               // renderd content
+	
 	is_stream bool   = false // if true this object is a stream
 	compress  bool   = false // if true the stream will be compressed
 }
@@ -123,7 +121,6 @@ fn (o Obj) render_obj_str(mut res_c strings.Builder, txt_parts string) int {
 
 	// obj end
 	res_c.write("endobj\n\n")
-	//return res.str()
 	return int(res_c.len)
 }
 
@@ -186,18 +183,18 @@ const(
 // all the formats are expressed in millimeters
 page_fmt = {
 	// ISO
-	'A0' : Box{0, 0, 841, 1189}
+	'A0' : Box{0, 0, 841 , 1189}
 	'B0' : Box{0, 0, 1000, 1414}
-	'A1' : Box{0, 0, 594, 841}
-	'B1' : Box{0, 0, 707, 1000}
-	'A2' : Box{0, 0, 420, 594}
-	'B2' : Box{0, 0, 500, 707}
-	'A3' : Box{0, 0, 297, 420}
-	'B3' : Box{0, 0, 353, 500}
-	'A4' : Box{0, 0, 210, 297}
-	'B4' : Box{0, 0, 250, 353}
-	'A5' : Box{0, 0, 148, 210}
-	'B5' : Box{0, 0, 176, 250}
+	'A1' : Box{0, 0, 594 , 841 }
+	'B1' : Box{0, 0, 707 , 1000}
+	'A2' : Box{0, 0, 420 , 594 }
+	'B2' : Box{0, 0, 500 , 707 }
+	'A3' : Box{0, 0, 297 , 420 }
+	'B3' : Box{0, 0, 353 , 500 }
+	'A4' : Box{0, 0, 210 , 297 }
+	'B4' : Box{0, 0, 250 , 353 }
+	'A5' : Box{0, 0, 148 , 210 }
+	'B5' : Box{0, 0, 176 , 250 }
 
 	// american
 	'letter'   : Box{0, 0, 216, 279}
@@ -208,18 +205,19 @@ page_fmt = {
 
 mm_unit   = 2.83464
 inch_unit = 72.0
+pdf_unit  = 1.0      // default for PDF manuals
 )
 
 
 pub
 struct Page{
 pub mut:
-	pdf &Pdf = &Pdf(0)          // PDF, page owner
-	content_obj_index int  = -1 // content object index
-	page_obj_id int             // obj id of the page
-	obj_id_list []int           // list of the page object
-	resources []string          // resource strings
-	fields    []string          // additional fields for the page
+	pdf &Pdf               = &Pdf(0)  // PDF, page owner
+	content_obj_index int  = -1       // content object index
+	page_obj_id int                   // obj id of the page
+	obj_id_list []int                 // list of the page object
+	resources []string                // resource strings
+	fields    []string                // additional fields for the page
 
 	// user unit in 1/72 of inch
 	// 1/72 = 0.35278 mm
@@ -399,11 +397,11 @@ pub mut:
 	obj_list []Obj        = []Obj{}        // list of all the object sof the pdf
 	page_list []Page      = []Page{}       // list of all the pages struct, these are not the page Objects of the pdf
 	base_font_used map[string]BaseFontRsc  // contains all the base font used in the pdf
-	id_count  int     = 0                  // id used to count the added obj
+	id_count  int         = 0              // id used to count the added obj
 
 	// utility data
 	u_to_glyph_table  map[string]string    // map from unicode to postscritpp glyph
-	user_unit f32 = 2.83464                // default mm in 1/72 of inch, inherit from pages if not specified
+	user_unit f32         = 2.83464        // default mm in 1/72 of inch, inherit from pages if not specified
 }
 
 // init_afm_metrics init the unicode to postscritpp glyph map
@@ -784,7 +782,7 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 ******************************************************************************/
 pub
 fn (pg Page) draw_rect(b Box) string {
-// bounding box rectangle coordinates transformation
+	// box coordinates transformation
 	x0 := (b.x * pg.user_unit)
 	x1 := x0 + b.w * pg.user_unit
 	y0 := pg.media_box.h - b.y * pg.user_unit
@@ -801,6 +799,53 @@ S
 "
 	return rect_txt
 }
+
+pub
+fn (pg Page) draw_filled_rect(b Box) string {
+	// box coordinates transformation
+	x0 := (b.x * pg.user_unit)
+	x1 := x0 + b.w * pg.user_unit
+	y0 := pg.media_box.h - b.y * pg.user_unit
+	y1 := y0 - b.h * pg.user_unit
+
+	rect_txt :=
+"
+${x0} ${y0} m 
+${x1} ${y0} l
+${x1} ${y1} l
+${x0} ${y1} l
+${x0} ${y0} l
+f
+S 
+"
+	return rect_txt
+}
+
+/*
+2 0 obj
+<< 
+/ProcSet [/PDF /Text /ImageB /ImageC /ImageI]
+/Font << /F1 3 0 R /F2 4 0 R >> 
+/XObject << /XT5 5 0 R /I0 11 0 R >> 
+/Pattern << /p1 15 0 R /p2 19 0 R /p3 21 0 R /p4 23 0 R /p5 25 0 R >>
+/Shading << /Sh1 14 0 R /Sh2 18 0 R /Sh3 20 0 R /Sh4 22 0 R /Sh5 24 0 R >> >>
+endobj
+
+// shader axial gradient
+12 0 obj
+<< /FunctionType 3 /Domain [0 1] /Functions [13 0 R] /Bounds [] /Encode [0 1] >>
+endobj
+13 0 obj
+<< /FunctionType 2 /Domain [0 1] /C0 [1.000000 0.000000 0.000000] /C1 [0.000000 0.000000 0.784314] /N 1 >>
+endobj
+14 0 obj
+<< /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 1.000000 0.000000] /Domain [0 1] /Function 12 0 R /Extend [true true] >>
+endobj
+15 0 obj
+<< /Type /Pattern /PatternType 2 /Shading 14 0 R >>
+endobj
+
+*/
 
 
 /******************************************************************************
