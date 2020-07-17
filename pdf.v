@@ -13,8 +13,8 @@ module pdf
 * TODO: 
 **********************************************************************/
 import strings
+import math
 //import os
-//import math
 
 /**********************************************************************
 *
@@ -51,6 +51,8 @@ pub mut:
 	
 	is_stream bool   = false // if true this object is a stream
 	compress  bool   = false // if true the stream will be compressed
+
+	name string
 }
 
 
@@ -460,6 +462,17 @@ fn (p Pdf) get_obj_index_by_id(id int) int{
 	return -1 // not found
 }
 
+// get_obj_by_name retrive an object using its object name
+pub
+fn (p Pdf) get_obj_index_by_name(name string) int{
+	for c,o in p.obj_list {
+		if o.name == name {
+			return c
+		}
+	}
+	return -1 // not found
+}
+
 // utility struct, used to store the dispalcement of the objects in order to create the Xref table of the pdf
 pub
 struct Posi{
@@ -543,6 +556,18 @@ fn (mut p Pdf) render() strings.Builder {
 	res.write(start_xref.str())
 	res.write("\n%%EOF\n")
 	return res
+}
+/******************************************************************************
+*
+* Color
+*
+******************************************************************************/
+pub
+struct RGB{
+pub mut:
+	r f32 = 0
+	g f32 = 0
+	b f32 = 0
 }
 
 /******************************************************************************
@@ -821,6 +846,11 @@ S
 	return rect_txt
 }
 
+/******************************************************************************
+*
+* Pattern: axis Shader 
+*
+******************************************************************************/
 /*
 2 0 obj
 << 
@@ -847,6 +877,77 @@ endobj
 
 */
 
+pub 
+fn (mut pdf Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, angle f32) int {
+	//FunctionType 2
+	mut f2_obj := Obj{id:pdf.get_new_id(), is_stream: false}
+	f2_obj.fields << " /FunctionType 2 /Domain [0 1] /C0 [${c1.r} ${c1.g} ${c1.b}] /C1 [${c2.r} ${c2.g} ${c2.b}] /N 1 "
+	pdf.obj_list << f2_obj
+
+	//FunctionType 3
+	mut f3_obj := Obj{id:pdf.get_new_id(), is_stream: false}
+	f3_obj.fields << " /FunctionType 3 /Domain [0 1] /Functions [${f2_obj.id} 0 R] /Bounds [] /Encode [0 1] "
+	pdf.obj_list << f3_obj
+
+	//ShadingType 2
+	mut s2_obj := Obj{id:pdf.get_new_id(), is_stream: false}
+	/*
+	s2_obj.fields << " /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 1.000000 0.000000] /Domain [0 1] /Function 
+	${f3_obj.id} 0 R /Extend [true true] "
+	*/
+
+	// rotation angle of the gradient
+	grad_sn := math.sin(angle)
+	grad_cs := math.cos(angle)
+	s2_obj.fields << " /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 ${grad_cs} ${grad_sn}] /Domain [0 1] /Function 
+	${f3_obj.id} 0 R /Extend [true true] "
+	pdf.obj_list << s2_obj
+
+	// shader obj
+	mut shader_obj := Obj{id:pdf.get_new_id(), is_stream: false}
+	shader_obj.fields << " /Type /Pattern /PatternType 2 /Shading ${s2_obj.id} 0 R "
+	shader_obj.name = name
+	pdf.obj_list << shader_obj
+	return shader_obj.id
+}
+
+pub
+fn (mut pg Page) use_shader(name string) bool{
+	index := pg.pdf.get_obj_index_by_name(name)
+	if index >= 0 {
+		pg.resources << " /Shading << /Sh_${name} ${index} 0 R >> "
+		return true
+	}
+	return false
+}
+
+/*
+* q % save state
+* ${x} ${y} ${w} ${-h} re % clip Path
+* W % clip command
+* n % end the path without stroke
+* % Modify  the  current  transformation  matrix 
+* ${grad_len} 0 0 ${grad_len} ${x} ${y} cm
+* /Sh_grad sh % Shader name to use for paint
+* Q % restore state
+*/
+pub
+fn (mut pg Page) draw_gradient_box(name string, b Box, in_grad_len f32) string {
+	// box coordinates transformation
+	x := (b.x * pg.user_unit)
+	w := b.w * pg.user_unit
+	y := pg.media_box.h - b.y * pg.user_unit
+	h := b.h * pg.user_unit
+	grad_len := in_grad_len * pg.user_unit
+	return
+"
+q
+${x} ${y} ${w} ${-h} re W n
+${grad_len} 0 0 ${grad_len} ${x} ${y} cm
+/Sh_${name} sh
+Q
+"
+}
 
 /******************************************************************************
 *
