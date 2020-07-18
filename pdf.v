@@ -220,6 +220,7 @@ pub mut:
 	obj_id_list []int                 // list of the page object
 	resources []string                // resource strings
 	fields    []string                // additional fields for the page
+	shaders   []string                // Pattern and Shaders
 
 	// user unit in 1/72 of inch
 	// 1/72 = 0.35278 mm
@@ -361,7 +362,8 @@ fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int) Po
 	for field in pg.fields {
 		obj.fields << field
 	}
-	
+
+	// resources
 	obj.fields << "/Resources  <<  /ProcSet  [/PDF/ImageB/ImageC/ImageI/Text] "
 	for rsrc in pg.resources {
 		obj.fields << rsrc
@@ -372,7 +374,19 @@ fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int) Po
 		obj.fields << "/Font  <<  /F${x.font_name_id}  ${x.obj_id} 0 R  >> "
 	}
 
+	//" /Shading << /Sh_${name} ${index} 0 R >> "
+	// shaders
+	if pg.shaders.len > 0 {
+		obj.fields << "/Shading <<"
+		for shader in pg.shaders {
+			obj.fields << shader
+		}
+		obj.fields << ">> "
+	}
+
 	obj.fields << ">> "
+
+	// Contents
 	obj.fields << "/Contents  ${pg.obj_id_list[0]} 0 R"
 
 	// save displacement a obj id of the page
@@ -668,7 +682,7 @@ struct Text_params{
 		font_color_c string
 		font_color_f string
 		render_mode  int     = -1
-		word_spacing f32     = -1
+		word_spacing f32     = 0
 		leading      f32     = 0.1  // in proportion of the font size
 
 		// transformation matrix
@@ -685,6 +699,12 @@ struct Text_params{
 		f_color RGB = RGB{-1,0,0}
 }
 
+// return the increment of Y for next line
+pub
+fn (mut pg Page) new_line_offset(fnt_params Text_params) f32 {
+	return f32(fnt_params.font_size + fnt_params.font_size*fnt_params.leading)/ pg.user_unit
+}
+
 pub
 fn (mut tp Text_params) scale(x_scale f32, y_scale f32) {
 	tp.tm00 = x_scale
@@ -697,7 +717,7 @@ fn (pg Page) draw_base_text(txt string, x f32, y f32, params Text_params) string
 	y1 := pg.media_box.h - (y * pg.user_unit)
 
 	redender_mode := if params.render_mode  >= 0 {"${params.render_mode} Tr\n"}  else {""}
-	word_spacing  := if params.word_spacing >= 0 {"${params.word_spacing * pg.user_unit} Tw\n"} else {""}
+	word_spacing  := if params.word_spacing > 0 {"${params.word_spacing * pg.user_unit} Tw\n"} else {""}
 	txt_matrix    := if params.tm00 != 0.0 {"${params.tm00} ${params.tm01} ${params.tm10} ${params.tm11} ${x1} ${y1} Tm\n"} else {"${x1} ${y1} Td\n"}
 
 	stroke_color := if params.s_color.r < 0 { "" } else { "${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG " }
@@ -730,17 +750,17 @@ fn (pg Page) calc_word_spacing(txt string, in_box Box, in_params Text_params) f3
 	return (in_box.w - tmp_width) / n_space
 }
 
-// text_box draw a text inside a box, return true if the text fit in teh box, otherwise false and the leftover text
+// text_box draw a text inside a box, return true if the text fit in the box, otherwise false and the leftover text and the last used y coordinate
 pub
-fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, string) {
+fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, string, f32) {
 	mut params := in_params
 
 	mut box := in_box
 	row_height := (params.font_size + params.font_size * params.leading) / pg.user_unit
 
 	// draw bb
-	pg.push_content("1.0  0.0  0.0  RG\n")
-	pg.push_content(pg.draw_rect(box))
+	//pg.push_content("1.0  0.0  0.0  RG\n")
+	//pg.push_content(pg.draw_rect(box))
 
 	// align flag multiplier
 	right_align := if params.text_align == .right { 1 } else { 0 }
@@ -749,6 +769,14 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 	rows := txt.split_into_lines()
 	for c,row in rows {
 		mut tmp_row := row
+
+		
+		// skip empty rows
+		if tmp_row.trim_space().len < 2 {
+			y += row_height
+			continue
+		}
+
 		mut tmp_width, _, _ := pg.calc_string_bb(tmp_row, params)
 
 		// the row is shorter than the box width 
@@ -764,11 +792,13 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 			y += row_height
 			if y > (box.y + box.h) {
 				if c+1 == rows.len {
-					return true, ""
+					pg.push_content("0 Tw\n")
+					return true, "", y
 				}
 				println("Too much text! [FL]")
 				leftover_text := rows[c+1..].join("\n")
-				return false, leftover_text
+				pg.push_content("0 Tw\n")
+				return false, leftover_text, y
 			}
 		 
 		// the row is longer than the box width, we need to cut it 
@@ -778,7 +808,7 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 			for l > 0 {
 				tmp_txt := words_list[..l].join(" ").trim_space()
 				tmp_width, _, _ = pg.calc_string_bb(tmp_txt, params)
-				if tmp_width < box.w {
+				if tmp_width <= box.w {
 					if params.text_align == .center {
 						tmp_ws := params.word_spacing
 						params.word_spacing = pg.calc_word_spacing(tmp_txt, box, params)
@@ -790,11 +820,13 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 					y += row_height
 					if y > (box.y + box.h) {
 						if c+1 == rows.len {
-							return true, ""
+							pg.push_content("0 Tw\n")
+							return true, "", y
 						}
 						println("Too much text! [CL]")
 						leftover_text := words_list[l..].join(" ").trim_space()+"\n"+rows[c+1..].join("\n")
-						return false, leftover_text
+						pg.push_content("0 Tw\n")
+						return false, leftover_text, y
 					} 
 					words_list = words_list[l..]
 					l = words_list.len
@@ -805,7 +837,8 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 		}
 	}
 	// all the text fitted
-	return true, ""
+	pg.push_content("0 Tw\n")
+	return true, "", y
 }
 
 /******************************************************************************
@@ -923,7 +956,8 @@ pub
 fn (mut pg Page) use_shader(name string) bool{
 	index := pg.pdf.get_obj_index_by_name(name)
 	if index >= 0 {
-		pg.resources << " /Shading << /Sh_${name} ${index} 0 R >> "
+		pg.shaders << "/Sh_${name} ${index} 0 R "
+		//pg.resources << " /Shading << /Sh_${name} ${index} 0 R >> "
 		return true
 	}
 	return false
@@ -1022,6 +1056,7 @@ fn (pg Page) calc_string_bb(txt string, params Text_params) (f32, f32, f32) {
 		w_glyph := base_font_metrics[params.font_name][glyph]
 		//println("$ch $len $glyph [$w_glyph]")
 		w += w_glyph
+		// manage space_scale for the space char
 		if len == 1 && ch == 0x20 {
 			w_s += space_scale
 		}
