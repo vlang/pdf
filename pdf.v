@@ -669,6 +669,7 @@ struct Text_params{
 		font_color_f string
 		render_mode  int     = -1
 		word_spacing f32     = -1
+		leading      f32     = 0.1  // in proportion of the font size
 
 		// transformation matrix
 		tm00 f32 = 0
@@ -678,6 +679,10 @@ struct Text_params{
 
 		// text allign
 		text_align Text_align = .left
+
+		// color
+		s_color RGB = RGB{-1,0,0}
+		f_color RGB = RGB{-1,0,0}
 }
 
 pub
@@ -695,10 +700,13 @@ fn (pg Page) draw_base_text(txt string, x f32, y f32, params Text_params) string
 	word_spacing  := if params.word_spacing >= 0 {"${params.word_spacing * pg.user_unit} Tw\n"} else {""}
 	txt_matrix    := if params.tm00 != 0.0 {"${params.tm00} ${params.tm01} ${params.tm10} ${params.tm11} ${x1} ${y1} Tm\n"} else {"${x1} ${y1} Td\n"}
 
+	stroke_color := if params.s_color.r < 0 { "" } else { "${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG " }
+	fill_color   := if params.f_color.r < 0 { "" } else { "${params.f_color.r} ${params.f_color.g} ${params.f_color.b} rg " }
 	return
 "
 BT
 /F${pg.pdf.base_font_used[params.font_name].font_name_id} ${params.font_size} Tf
+${stroke_color}${fill_color}
 ${txt_matrix}${redender_mode}${word_spacing}(${txt}) Tj
 ET
 "
@@ -728,7 +736,7 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 	mut params := in_params
 
 	mut box := in_box
-	row_height := params.font_size / pg.user_unit
+	row_height := (params.font_size + params.font_size * params.leading) / pg.user_unit
 
 	// draw bb
 	pg.push_content("1.0  0.0  0.0  RG\n")
