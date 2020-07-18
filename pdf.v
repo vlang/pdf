@@ -705,6 +705,12 @@ fn (mut pg Page) new_line_offset(fnt_params Text_params) f32 {
 	return f32(fnt_params.font_size + fnt_params.font_size*fnt_params.leading)/ pg.user_unit
 }
 
+// clean_string clean form round brackets and backslash for PDF atring standard
+pub
+fn clean_pdf_string(txt string) string {
+	return txt.replace_each(["(", "\\(", ")", "\\)", "\\","\\\\"])
+}
+
 pub
 fn (mut tp Text_params) scale(x_scale f32, y_scale f32) {
 	tp.tm00 = x_scale
@@ -712,7 +718,7 @@ fn (mut tp Text_params) scale(x_scale f32, y_scale f32) {
 }
 
 pub
-fn (pg Page) draw_base_text(txt string, x f32, y f32, params Text_params) string {	
+fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) string {	
 	x1 := x * pg.user_unit
 	y1 := pg.media_box.h - (y * pg.user_unit)
 
@@ -722,6 +728,7 @@ fn (pg Page) draw_base_text(txt string, x f32, y f32, params Text_params) string
 
 	stroke_color := if params.s_color.r < 0 { "" } else { "${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG " }
 	fill_color   := if params.f_color.r < 0 { "" } else { "${params.f_color.r} ${params.f_color.g} ${params.f_color.b} rg " }
+	txt := clean_pdf_string(in_txt)
 	return
 "
 BT
@@ -770,7 +777,6 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 	for c,row in rows {
 		mut tmp_row := row
 
-		
 		// skip empty rows
 		if tmp_row.trim_space().len < 2 {
 			y += row_height
