@@ -96,15 +96,7 @@ ${cos_v} ${-sin_v} ${sin_v} ${cos_v} 306 300 Tm
 ET
 "
 	}
-/*
-	b.txt = "
-	BT
-	/F1 20 Tf
-	10 710 Td
-	(${sent}) Tj
-	ET
-	"
-*/
+
 	b.parts << "BT 10 100 Td (Ciao da me Dario!)Tj ET"
 
 	doc.add_page_obj(page, b)
@@ -135,7 +127,6 @@ ET
 	doc.add_page_obj(page, b1)
 	
 	txt := doc.render()
-	//println(txt)
 
 	// write it to a file
     os.write_file_array('example02.pdf', txt.buf)

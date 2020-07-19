@@ -18,7 +18,7 @@ fn main(){
     jpeg_data := os.read_bytes("data/v.jpg") or { panic(err) }
     jpeg_id := doc.add_jpeg_resource(jpeg_data)
     
-    // use the jpeg in pur page
+    // use the jpeg in our page
     page.use_jpeg(jpeg_id)
 
     // create the page Content
