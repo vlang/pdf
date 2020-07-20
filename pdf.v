@@ -763,7 +763,7 @@ pub
 fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, string, f32) {
 	mut params := in_params
 
-	mut box := in_box
+	mut box := Box{in_box.x ,in_box.y, in_box.w, in_box.h}
 	row_height := (params.font_size + params.font_size * params.leading) / pg.user_unit
 
 	// draw bb
