@@ -3,6 +3,15 @@ import os
 
 const(
 	file_name = "alice_in_wonderland"
+	
+	page_iso_format = 'A4'
+	pg_fmt = pdf.page_fmt[page_iso_format]
+	text_box = pdf.Box{
+		x: pg_fmt.x + 30
+		y: 20
+		w: pg_fmt.w - 60
+		h: pg_fmt.h - 40
+	}
 )
 
 fn main(){
@@ -14,8 +23,6 @@ fn main(){
 	mut fnt_params := pdf.Text_params{
 		font_size    : 12
 		font_name    : "Helvetica"
-		render_mode  : -1
-		word_spacing : -1
 		text_align   : .left
 		s_color : {r:0,g:0,b:0}
 		f_color : {r:0,g:0,b:0}
@@ -31,49 +38,30 @@ fn main(){
 	mut lo_txt  := " "
 	mut last_y  := f32(0)
 
+	// render the pages
 	for src_txt.len > 0 {
-		page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: true})
+		page_n := doc.create_page({format: page_iso_format, gen_content_obj: true, compress: true})
 		mut page := &doc.page_list[page_n]
 		page.user_unit = pdf.mm_unit
-
-		//----- Text Area -----
-		tb := pdf.Box{
-			x: page.media_box.x/page.user_unit + 30
-			y: 20
-			w: page.media_box.w/page.user_unit - 60
-			h: page.media_box.h/page.user_unit - 40
-		}
-		
-		//----- test box text -----
-		//fnt_params.text_align = .left
-
-		tmp_res, lo_txt, last_y  = page.text_box(src_txt, tb, fnt_params)
+		//----- Page text -----
+		tmp_res, lo_txt, last_y  = page.text_box(src_txt, text_box, fnt_params)
 		src_txt = lo_txt
 	}
-
+	// render the headers and footers
 	mut index := 0
 	for index < doc.page_list.len {
 		mut page := &doc.page_list[index]
-	
-		//----- Text Area -----
-		tb := pdf.Box{
-			x: page.media_box.x/page.user_unit + 20
-			y: 20
-			w: page.media_box.w/page.user_unit - 40
-			h: page.media_box.h/page.user_unit - 40
-		}
-
 		//----- Header -----
 		fnt_params.font_size = 8.0
 		header := "${file_name}"
 		fnt_params.text_align = .center
-		page.text_box(header, {x:10, y:12, w:tb.w ,h: 20}, fnt_params)
+		page.text_box(header, {x:10, y:12, w:pg_fmt.w - 20 ,h: 20}, fnt_params)
 
 		//----- Footer -----
 		fnt_params.font_size = 8.0
 		footer := "Page ${index+1} of ${doc.page_list.len}"
 		fnt_params.text_align = .right
-		page.text_box(footer, {x:tb.x, y:page.media_box.h/page.user_unit-10, w:tb.w ,h: 20}, fnt_params)
+		page.text_box(footer, {x:10, y:pg_fmt.h - 10, w:pg_fmt.w - 30 ,h: 20}, fnt_params)
 		
 		index++
 	}
