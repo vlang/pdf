@@ -5,7 +5,7 @@ fn main(){
 	mut doc := pdf.Pdf{}
 	doc.init()
 
-	page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: false})
+	page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: true})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
 
@@ -47,17 +47,20 @@ fn main(){
 		h: page.media_box.h/page.user_unit - 20
 	}
 
-	boxes := [
-		pdf.Box{x:tb.x, y:tb.y, w:tb.w/2-10,  h:tb.h-20},
-		pdf.Box{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:tb.h-20},
-		//{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:10},
-	]
 	// justify align
 	fnt_params.text_align = .justify
 	mut tmp_txt := my_str
 	mut tmp_res := false
 	mut lo_txt  := " "
 	mut last_y  := f32(0)
+	
+	// set two columns
+	boxes := [
+		pdf.Box{x:tb.x, y:tb.y, w:tb.w/2-10,  h:tb.h-20},
+		pdf.Box{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:tb.h-20},
+		//{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:10},
+	]
+
 	for bx in boxes {
 		if lo_txt.len > 0 {
 			tmp_res, lo_txt, last_y  = page.text_box(tmp_txt, bx, fnt_params)

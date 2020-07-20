@@ -747,7 +747,7 @@ fn (pg Page) calc_word_spacing(txt string, in_box Box, in_params Text_params) f3
 	mut tmp_width, _, _ := pg.calc_string_bb(txt, in_params)
 	
 	// if the width is less then the half do not calculate space
-	if tmp_width <= (in_box.w / 2) {
+	if tmp_width <= (in_box.w * 0.75) {
 		return params.word_spacing
 	}
 
@@ -808,7 +808,7 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 					pg.push_content("0 Tw\n")
 					return true, "", y
 				}
-				println("Too much text! [FL]")
+				//println("Too much text! [FL]")
 				leftover_text := rows[c+1..].join("\n")
 				pg.push_content("0 Tw\n")
 				return false, leftover_text, y
@@ -841,7 +841,7 @@ fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bool, 
 							pg.push_content("0 Tw\n")
 							return true, "", y
 						}
-						println("Too much text! [CL]")
+						//println("Too much text! [CL]")
 						leftover_text := words_list[l..].join(" ").trim_space()+"\n"+rows[c+1..].join("\n")
 						pg.push_content("0 Tw\n")
 						return false, leftover_text, y
