@@ -80,7 +80,7 @@ Let's breakdown the code:
 
 #### PDF creation
 
-First of all we need to create a PDF and initialize all the thing the we need to use it:
+First of all we need to create a PDF and initialize all the thing the we need to use in it:
 
 ```v
 mut doc := pdf.Pdf{}
