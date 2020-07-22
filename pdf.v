@@ -618,9 +618,9 @@ fn (mut p Pdf) use_base_font(font_name string) bool {
 * JPEG resources
 *
 ******************************************************************************/
-// get_jpeg_size get the width,height and number of bit per pixel of a jpeg file
+// get_jpeg_info get the width,height and number of bit per pixel of a jpeg file
 pub
-fn get_jpeg_size(data []byte) (int,int,int) {
+fn get_jpeg_info(data []byte) (int,int,int) {
 	// cehck for empty
 	if data.len <= 0 {
 		return 0, 0 , 0
@@ -649,7 +649,7 @@ fn get_jpeg_size(data []byte) (int,int,int) {
 // add_jpeg_resource add a jpeg as resource to the pdf
 pub
 fn (mut p Pdf) add_jpeg_resource(jpeg_data []byte) int { 
-	jpg_n_bit, jpg_w, jpg_h := get_jpeg_size(jpeg_data)
+	jpg_n_bit, jpg_w, jpg_h := get_jpeg_info(jpeg_data)
 	mut jpeg_obj := Obj{id:p.get_new_id(), is_stream: true}
 	jpeg_obj.fields << "/Type/XObject/Subtype/Image /Width $jpg_w /Height $jpg_h /BitsPerComponent $jpg_n_bit /ColorSpace/DeviceRGB/Filter/DCTDecode/Length ${jpeg_data.len}"
 	jpeg_obj.raw_data =  jpeg_data
@@ -662,6 +662,22 @@ pub
 fn (mut p Page) use_jpeg(jpeg_id int) {
 	p.resources << "/XObject<</Image${jpeg_id} ${jpeg_id} 0 R>>"
 }
+
+pub fn (mut pg Page) draw_jpeg(jpeg_id int, bx Box) string {
+	x := bx.x * pg.user_unit
+	y := pg.media_box.h - (bx.y * pg.user_unit)
+	w := bx.w * pg.user_unit
+	h := bx.h * pg.user_unit
+	
+	return
+"
+q
+${w} 0 0 ${h} ${x} ${y} cm
+/Image${jpeg_id} Do 
+Q
+"
+}
+
 /******************************************************************************
 *
 * Text

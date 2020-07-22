@@ -24,6 +24,8 @@ At the higher level, there are various functions which simplify creating a PDF, 
 
 Let's start with a reasonably simple example: creating a PDF with only one page and with a simple string on it. For this example we will use the high level layer of **vPDF**:
 
+### Complete source (example 06)
+
 ```v
 import pdf
 import os
@@ -210,3 +212,106 @@ startxref
 589
 %%EOF
 ```
+
+## Add a JPEG image
+
+Now we can add an image to the page, it can be simply do adding the following lines just before the rendering operation:
+
+```v
+// read a jpeg image from the disk
+jpeg_data := os.read_bytes("data/v.jpg") or { panic(err) }
+jpeg_id := doc.add_jpeg_resource(jpeg_data)
+// tell the page we want use a this jpeg in the page
+page.use_jpeg(jpeg_id)
+
+// get width and height in pixel of the jpeg image
+_, w, h := pdf.get_jpeg_info(jpeg_data)
+h_scale := h / w
+
+page.push_content(
+page.draw_jpeg(jpeg_id, {x:10, y:60, w:30, h:30 * h_scale})
+)
+```
+
+First we need to load in memory the image, this task is achieved with: `os.read_bytes("data/v.jpg")`
+
+Now we must add the jpeg to the resources of the PDF: `doc.add_jpeg_resource(jpeg_data)` that return an id that we will use to identify the jpeg as PDF resource.
+
+**Note:** *All the resources of a PDF file like images, fonts etc must be loaded and stored inside the PDF itself as PDF objects.*
+
+The  **vPDF** module take care about the creation of the objects and their indexing.
+
+Now we must use the jpeg, this usage belong to the page and we must tell to the page that we want use a specific image, we do this with: `page.use_jpeg(jpeg_id)`
+
+Before draw the image we can collect some info on it using: `_, w, h := pdf.get_jpeg_info(jpeg_data)` in this case we need only the width and the height of the jpeg.
+
+Now we can draw our jpeg in the pdf using:
+
+```v
+page.push_content(
+	page.draw_jpeg(jpeg_id, {x:10, y:60, w:30, h:30 * h_scale})
+)
+```
+
+where we specify the `jpeg_id` returned by the `add_jpeg_resource` call and a `Box` with the position and dimension where we want the jpeg.
+
+In this case we will draw the jpeg at 10 mm from the left border and 60 mm from the top border with a width of 30mm and a height proportional to the source.
+
+### Complete source (example 07)
+
+```v
+import pdf
+import os
+
+fn main(){
+	mut doc := pdf.Pdf{}
+	doc.init()
+
+	page_n := doc.create_page({
+		format: 'A4', 
+		gen_content_obj: true, 
+		compress: false
+	})
+	mut page := &doc.page_list[page_n]
+	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
+
+	mut fnt_params := pdf.Text_params{
+		font_size    : 22.0
+		font_name    : "Helvetica"
+		s_color : {r:0,g:0,b:0}
+		f_color : {r:0,g:0,b:0}
+	}
+
+	// Declare the base (Type1 font) we want use
+	if !doc.use_base_font(fnt_params.font_name) {
+		eprintln("ERROR: Font ${fnt_params.font_name} not available!")
+		return
+	}
+
+	// write the string
+	page.push_content( 
+		page.draw_base_text("My first string.", 10, 10, fnt_params)
+	)
+
+	// read a jpeg image from the disk
+	jpeg_data := os.read_bytes("data/v.jpg") or { panic(err) }
+	jpeg_id := doc.add_jpeg_resource(jpeg_data)
+	// tell the page we want use a this jpeg in the page
+	page.use_jpeg(jpeg_id)
+
+	// get width and height in pixel of the jpeg image
+	_, w, h := pdf.get_jpeg_info(jpeg_data)
+	h_scale := h / w
+	
+	page.push_content(
+		page.draw_jpeg(jpeg_id, {x:10, y:60, w:30, h:30 * h_scale})
+	)
+
+	// render the PDF
+	txt := doc.render()
+
+	// write it to a file
+	os.write_file_array('example07.pdf', txt.buf)
+}
+```
+
