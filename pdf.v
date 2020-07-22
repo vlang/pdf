@@ -1039,6 +1039,7 @@ fn utf8util_char_len(b byte) int {
 fn get_uchar(s string, index int) (int,int) {
 	mut res := 0
 	mut ch_len := 0
+	unsafe {
 	if s.len > 0  {
 		ch_len = utf8util_char_len(s.str[index])
 
@@ -1071,6 +1072,7 @@ fn get_uchar(s string, index int) (int,int) {
 			}
 		}
 
+	}
 	}
 	return res, ch_len
 }
