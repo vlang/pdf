@@ -215,7 +215,7 @@ startxref
 
 ## Add a JPEG image
 
-Now we can add an image to the page, it can be simply do adding the following lines just before the rendering operation:
+Now we can add an image to the page, it can be simply done adding the following lines just before the rendering operation:
 
 ```v
 // read a jpeg image from the disk
