@@ -102,9 +102,9 @@ page.user_unit = pdf.mm_unit       // set millimeters for all operations
 
 ### Font selection and use
 
-To write a simple string we need to tell the page what font we want to use, and its properties.
+To write a simple string we need to tell the page which font we want to use, and its properties.
 
-First we create a `Text_params` *struct* that contain all the information **vPDF** needs to instantiate and use a font:
+First we create a `Text_params` *struct* that contains all the information **vPDF** needs to instantiate and use a font:
 
 We want a 22pt Helvetica font, and we set the font (stroke) color and fill color:
 
