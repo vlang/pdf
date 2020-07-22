@@ -36,6 +36,4 @@ fn main(){
 
 	// write it to a file
 	os.write_file_array('example06.pdf', txt.buf)
-
-	println(pdf.get_base_font_list())
 }
