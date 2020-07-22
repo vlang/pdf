@@ -746,7 +746,7 @@ fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) str
 	stroke_color := if params.s_color.r < 0 { "" } else { "${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG " }
 	fill_color   := if params.f_color.r < 0 { "" } else { "${params.f_color.r} ${params.f_color.g} ${params.f_color.b} rg " }
 	txt := clean_pdf_string(in_txt)
-	return
+	res :=
 "
 BT
 /F${pg.pdf.base_font_used[params.font_name].font_name_id} ${params.font_size} Tf
@@ -754,6 +754,7 @@ ${stroke_color}${fill_color}
 ${txt_matrix}${redender_mode}${word_spacing}(${txt}) Tj
 ET
 "
+	return res
 }
 
 // calc_word_spacing calculate the sapcing to add to the space char 0x20 to fill the row only if txt fill al least half of teh horizontal space of the box.w
