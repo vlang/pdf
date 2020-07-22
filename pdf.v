@@ -734,6 +734,7 @@ fn (mut tp Text_params) scale(x_scale f32, y_scale f32) {
 	tp.tm11 = y_scale
 }
 
+// draw_base_text draw a simple string at the x,y coordinates with the text parameters params
 pub
 fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) string {	
 	x1 := x * pg.user_unit
@@ -742,19 +743,19 @@ fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) str
 	redender_mode := if params.render_mode  >= 0 {"${params.render_mode} Tr\n"}  else {""}
 	word_spacing  := if params.word_spacing > 0 {"${params.word_spacing * pg.user_unit} Tw\n"} else {""}
 	txt_matrix    := if params.tm00 != 0.0 {"${params.tm00} ${params.tm01} ${params.tm10} ${params.tm11} ${x1} ${y1} Tm\n"} else {"${x1} ${y1} Td\n"}
-
+	
 	stroke_color := if params.s_color.r < 0 { "" } else { "${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG " }
 	fill_color   := if params.f_color.r < 0 { "" } else { "${params.f_color.r} ${params.f_color.g} ${params.f_color.b} rg " }
+	
 	txt := clean_pdf_string(in_txt)
-	res :=
+	
+	return
 "
 BT
 /F${pg.pdf.base_font_used[params.font_name].font_name_id} ${params.font_size} Tf
-${stroke_color}${fill_color}
-${txt_matrix}${redender_mode}${word_spacing}(${txt}) Tj
+${stroke_color}${fill_color}${txt_matrix}${redender_mode}${word_spacing}(${txt}) Tj
 ET
 "
-	return res
 }
 
 // calc_word_spacing calculate the sapcing to add to the space char 0x20 to fill the row only if txt fill al least half of teh horizontal space of the box.w
