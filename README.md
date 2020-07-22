@@ -87,7 +87,7 @@ doc.init()
 
 #### Page format and creation
 
-Once we have our PDF initialized, we need to create the page or the pages. The page can have a lot of parameters like: dimensions, flag to indicate if we want the **vPDF** do automatically the objects creation or we want do it manually, etc. 
+Once we have our PDF initialized, we need to create the page or the pages. The page can have a lot of parameters like: dimensions, a flag to indicate if we want **vPDF** to handle the objects creation for us, etc. 
 
 For this example, we've used the simplest configuration possible:
 
@@ -107,7 +107,7 @@ page_n := doc.create_page({
 After the `create_page` function is called, it returns the index of the page in **vPDF**'s internal page list.
 <!--after that the page is created and the `create_page` return the index of the page in the page array in the **vPDF** page list.-->
 
-In the previous snippet, we set the page's format to A4. We'll find using millimeters easier to work with, so let's get the one of interest and set the working units accordingly:
+In the previous snippet, we set the page's format to A4. We'll find using millimeters easier to work with, so let's get the page of interest and set the working units accordingly:
 ```v
 mut page := &doc.page_list[page_n] // get the page struct
 page.user_unit = pdf.mm_unit       // set to use millimeters for the operations
@@ -134,7 +134,7 @@ mut fnt_params := pdf.Text_params{
 - `s_color:` is the color for the stroke operations
 - `f_color:`is the color for the fill operations
 
-After that, we can tell **vPDF** the font that we want to use in the PDF file :
+After that, we can now tell **vPDF** the font that we want to use in the PDF file :
 
 ```v
 doc.use_base_font(fnt_params.font_name)
@@ -172,7 +172,7 @@ os.write_file_array('example06.pdf', txt.buf)
 
 ## Resultant PDF
 
-The obtained PDF file can be opened in a simple text editor Because we chose not to compress as we went along; we can read the PDF's raw form:
+The obtained PDF file can be opened in a simple text editor. Because we chose not to compress as we went along; we can read the PDF's raw form:
 
 ```
 %PDF-1.4
