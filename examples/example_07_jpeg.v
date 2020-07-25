@@ -11,7 +11,7 @@ fn main(){
 		compress: false
 	})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
+	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
 		font_size    : 22.0

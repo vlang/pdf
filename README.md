@@ -40,7 +40,7 @@ fn main(){
 		compress: false
 	})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
+	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
 		font_size    : 22.0
@@ -273,7 +273,7 @@ fn main(){
 		compress: false
 	})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
+	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
 		font_size    : 22.0
@@ -312,6 +312,113 @@ fn main(){
 
 	// write it to a file
 	os.write_file_array('example07.pdf', txt.buf)
+}
+```
+
+## Text Box
+
+A text box is a page's box where the text is fitted. 
+
+It is an utility function that help write indented text.
+
+As input you need :
+
+- the source text
+- a Box with the coordinates and dimensions of the container box
+- a `Text_params` structure, the possible `text_align` values are: `left, center, right, justify`
+
+```v
+source_txt := "text to write"
+text_bx   := pdf.Box{x:10, y:10, w:40, h:60}
+nt_params  := pdf.Text_params{
+		font_size    : 22.0
+		font_name    : "Helvetica"
+		text_align   : .left
+}
+res, left_over_txt, bottom_y  = page.text_box(source_txt, text_bx, fnt_params)
+```
+
+As output you will obtain:
+
+- `res` is true if all the `source_txt` lay inside the `text_bx` otherwise false.
+-  `left_over_txt` is the text that was not possible to fit inside `text_bx`
+- `bottom_y` is the bottom y coordinate where the text was written by `text_box` function.
+
+You can use the `left_over_txt` as input for other  `text_box` function like in the example 03 or example 05.
+
+### Complete source (example 03)
+
+```v
+import pdf
+import os
+
+fn main(){
+	mut doc := pdf.Pdf{}
+	doc.init()
+
+	page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: true})
+	mut page := &doc.page_list[page_n]
+	page.user_unit = pdf.mm_unit
+
+	mut fnt_params := pdf.Text_params{
+		font_size    : 22.0
+		font_name    : "Helvetica"
+		render_mode  : -1
+		word_spacing : -1
+		s_color : {r:0,g:0,b:0}
+		f_color : {r:0,g:0,b:0}
+	}
+
+	// Declare the base (Type1 font) we want use
+	if !doc.use_base_font(fnt_params.font_name) {
+		eprintln("ERROR: Font ${fnt_params.font_name} not available!")
+		return
+	}
+
+	//----- test box text -----
+	fnt_params.word_spacing = 0
+	fnt_params.font_size = 12
+
+	mut my_str := "Some multi-line txt...."
+
+	//----- Text Area -----
+	tb := pdf.Box{
+		x: page.media_box.x/page.user_unit + 10
+		y: 20
+		w: page.media_box.w/page.user_unit - 20
+		h: page.media_box.h/page.user_unit - 20
+	}
+
+	// justify align
+	fnt_params.text_align = .justify
+	mut tmp_txt := my_str
+	mut tmp_res := false
+	mut lo_txt  := " "
+	mut last_y  := f32(0)
+	
+	// set two columns
+	boxes := [
+		pdf.Box{x:tb.x, y:tb.y, w:tb.w/2-10,  h:tb.h-20},
+		pdf.Box{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:tb.h-20},
+	]
+
+	for bx in boxes {
+		if lo_txt.len > 0 {
+			tmp_res, lo_txt, last_y  = page.text_box(tmp_txt, bx, fnt_params)
+			if tmp_res {
+				break
+			}
+			tmp_txt = lo_txt 
+			//println("leftover: [${lo_txt}]")
+		}
+	}
+	//println("res: ${tmp_res} left_over: [${lo_txt}]")
+
+	// render the PDF
+	txt := doc.render()
+
+	// write it to a file
+	os.write_file_array('example03.pdf', txt.buf)
 }
 ```
 

@@ -7,7 +7,7 @@ fn main(){
 
 	page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: true})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit //1.0 // set 1/72 of inch
+	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
 		font_size    : 22.0
@@ -58,7 +58,6 @@ fn main(){
 	boxes := [
 		pdf.Box{x:tb.x, y:tb.y, w:tb.w/2-10,  h:tb.h-20},
 		pdf.Box{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:tb.h-20},
-		//{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:10},
 	]
 
 	for bx in boxes {
