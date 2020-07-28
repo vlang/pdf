@@ -20,6 +20,12 @@ At the lower level, it is possible to create a PDF and write directly to it.  Th
 
 At the higher level, there are various functions which simplify creating a PDF, and no knowledge of the PDF format is required to use them.
 
+## Installation
+
+```
+v install pdf
+```
+
 ## QuickStart
 
 Let's start with a reasonably simple example: creating a PDF with only one page and with a simple string on it. For this example we will use the high level layer of **vPDF**:
