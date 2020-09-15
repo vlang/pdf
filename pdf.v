@@ -42,15 +42,15 @@ fn C.compress(byteptr, &u32, charptr, u32) int
 pub  // when in a module must be uncomented  
 struct Obj{
 pub mut:
-	id  int          = 0     // obj id
-	ver int          = 0     // version of the obj, default 0
+	id  int                  // obj id
+	ver int                  // version of the obj, default 0
 	fields []string          // list of the fields of the obj
 	parts  []string          // list of all parts, these are before the txt field
-	txt string       = ""    // raw source content, it is used after the parts
+	txt string               // raw source content, it is used after the parts
 	raw_data  []byte
 	
-	is_stream bool   = false // if true this object is a stream
-	compress  bool   = false // if true the stream will be compressed
+	is_stream bool           // if true this object is a stream
+	compress  bool           // if true the stream will be compressed
 
 	name string
 }
@@ -245,10 +245,10 @@ pub mut:
 
 	// content params
 	is_stream bool = true
-	compress  bool = false
+	compress  bool
 
 	// config param
-	gen_content_obj bool = false
+	gen_content_obj bool
 }
 
 pub
@@ -413,7 +413,7 @@ pub mut:
 	obj_list []Obj        = []Obj{}        // list of all the object sof the pdf
 	page_list []Page      = []Page{}       // list of all the pages struct, these are not the page Objects of the pdf
 	base_font_used map[string]BaseFontRsc  // contains all the base font used in the pdf
-	id_count  int         = 0              // id used to count the added obj
+	id_count  int                          // id used to count the added obj
 
 	// utility data
 	u_to_glyph_table  map[string]string    // map from unicode to postscritpp glyph
@@ -579,9 +579,9 @@ fn (mut p Pdf) render() strings.Builder {
 pub
 struct RGB{
 pub mut:
-	r f32 = 0
-	g f32 = 0
-	b f32 = 0
+	r f32 
+	g f32 
+	b f32 
 }
 
 /******************************************************************************
@@ -699,14 +699,14 @@ struct Text_params{
 		font_color_c string
 		font_color_f string
 		render_mode  int     = -1
-		word_spacing f32     = 0
+		word_spacing f32
 		leading      f32     = 0.1  // in proportion of the font size
 
 		// transformation matrix
-		tm00 f32 = 0
-		tm10 f32 = 0
-		tm01 f32 = 0
-		tm11 f32 = 0
+		tm00 f32 
+		tm10 f32 
+		tm01 f32 
+		tm11 f32 
 
 		// text allign
 		text_align Text_align = .left

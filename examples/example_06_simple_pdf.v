@@ -8,7 +8,7 @@ fn main(){
 	page_n := doc.create_page({
 		format: 'A4', 
 		gen_content_obj: true, 
-		compress: false
+		compress: true
 	})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit
