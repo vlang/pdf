@@ -36,41 +36,47 @@ Let's start with a reasonably simple example: creating a PDF with only one page 
 import pdf
 import os
 
-fn main(){
+fn main() {
 	mut doc := pdf.Pdf{}
 	doc.init()
 
-	page_n := doc.create_page({
-		format: 'A4',
-		gen_content_obj: true,
+	page_n := doc.create_page(pdf.Page_params{
+		format: 'A4'
+		gen_content_obj: true
 		compress: false
 	})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
-		font_size    : 22.0
-		font_name    : "Helvetica"
-		s_color : {r:0,g:0,b:0}
-		f_color : {r:0,g:0,b:0}
+		font_size: 22.0
+		font_name: 'Helvetica'
+		s_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
+		f_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
 	}
 
 	// Declare the base (Type1 font) we want use
 	if !doc.use_base_font(fnt_params.font_name) {
-		eprintln("ERROR: Font ${fnt_params.font_name} not available!")
+		eprintln('ERROR: Font $fnt_params.font_name not available!')
 		return
 	}
 
 	// write the string
-	page.push_content(
-		page.draw_base_text("My first string.", 10, 10, fnt_params)
-	)
+	page.push_content(page.draw_base_text('My first string.', 10, 10, fnt_params))
 
 	// render the PDF
-	txt := doc.render()
+	txt := doc.render() ?
 
 	// write it to a file
-	os.write_file_array('example06.pdf', txt.buf)
+	os.write_file_array('example06.pdf', txt) ?
 }
 ```
 
@@ -92,9 +98,9 @@ Once we have the PDF structure, we need to create the page or pages. The page ca
 For this example we use the simplest configuration possible.  We want to create an `A4` page (210x297 mm), we want **vPDF** to handle object creation and tracking for us, and we do not want to compress the output:
 
 ```v
-page_n := doc.create_page({
-	format: 'A4',
-	gen_content_obj: true,
+page_n := doc.create_page(pdf.Page_params{
+	format: 'A4'
+	gen_content_obj: true
 	compress: false
 })
 ```
@@ -269,38 +275,44 @@ In this case we will draw the jpeg at 10 mm from the left border and 60 mm from 
 import pdf
 import os
 
-fn main(){
+fn main() {
 	mut doc := pdf.Pdf{}
 	doc.init()
 
-	page_n := doc.create_page({
-		format: 'A4', 
-		gen_content_obj: true, 
+	page_n := doc.create_page(pdf.Page_params{
+		format: 'A4'
+		gen_content_obj: true
 		compress: false
 	})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
-		font_size    : 22.0
-		font_name    : "Helvetica"
-		s_color : {r:0,g:0,b:0}
-		f_color : {r:0,g:0,b:0}
+		font_size: 22.0
+		font_name: 'Helvetica'
+		s_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
+		f_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
 	}
 
 	// Declare the base (Type1 font) we want use
 	if !doc.use_base_font(fnt_params.font_name) {
-		eprintln("ERROR: Font ${fnt_params.font_name} not available!")
+		eprintln('ERROR: Font $fnt_params.font_name not available!')
 		return
 	}
 
 	// write the string
-	page.push_content( 
-		page.draw_base_text("My first string.", 10, 10, fnt_params)
-	)
+	page.push_content(page.draw_base_text('My first string.', 10, 10, fnt_params))
 
 	// read a jpeg image from the disk
-	jpeg_data := os.read_bytes("data/v.jpg") or { panic(err) }
+	jpeg_data := os.read_bytes('data/v.jpg') or { panic(err) }
 	jpeg_id := doc.add_jpeg_resource(jpeg_data)
 	// tell the page we want use a this jpeg in the page
 	page.use_jpeg(jpeg_id)
@@ -308,16 +320,19 @@ fn main(){
 	// get width and height in pixel of the jpeg image
 	_, w, h := pdf.get_jpeg_info(jpeg_data)
 	h_scale := h / w
-	
-	page.push_content(
-		page.draw_jpeg(jpeg_id, {x:10, y:60, w:30, h:30 * h_scale})
-	)
+
+	page.push_content(page.draw_jpeg(jpeg_id, pdf.Box{
+		x: 10
+		y: 60
+		w: 30
+		h: 30 * h_scale
+	}))
 
 	// render the PDF
-	txt := doc.render()
+	txt := doc.render() ?
 
 	// write it to a file
-	os.write_file_array('example07.pdf', txt.buf)
+	os.write_file_array('example07.pdf', txt) ?
 }
 ```
 
@@ -358,26 +373,38 @@ You can use the `left_over_txt` as input for other  `text_box` function like in 
 import pdf
 import os
 
-fn main(){
+fn main() {
 	mut doc := pdf.Pdf{}
 	doc.init()
 
-	page_n := doc.create_page({format: 'A4', gen_content_obj: true, compress: true})
+	page_n := doc.create_page(pdf.Page_params{
+		format: 'A4'
+		gen_content_obj: true
+		compress: false
+	})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit
 
 	mut fnt_params := pdf.Text_params{
-		font_size    : 22.0
-		font_name    : "Helvetica"
-		render_mode  : -1
-		word_spacing : -1
-		s_color : {r:0,g:0,b:0}
-		f_color : {r:0,g:0,b:0}
+		font_size: 22.0
+		font_name: 'Helvetica'
+		render_mode: -1
+		word_spacing: -1
+		s_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
+		f_color: pdf.RGB{
+			r: 0
+			g: 0
+			b: 0
+		}
 	}
 
 	// Declare the base (Type1 font) we want use
 	if !doc.use_base_font(fnt_params.font_name) {
-		eprintln("ERROR: Font ${fnt_params.font_name} not available!")
+		eprintln('ERROR: Font $fnt_params.font_name not available!')
 		return
 	}
 
@@ -385,46 +412,64 @@ fn main(){
 	fnt_params.word_spacing = 0
 	fnt_params.font_size = 12
 
-	mut my_str := "Some multi-line txt...."
+	mut my_str := "Quicksort (sometimes called partition-exchange sort) is an efficient sorting algorithm.
+	Developed by British computer scientist Tony Hoare in 1959 and published in 1961, it is still a commonly used algorithm for sorting. When implemented well, it can be about two or three times faster than its main competitors, merge sort and heapsort.
+	Quicksort is a divide-and-conquer algorithm. It works by selecting a 'pivot' element from the array and partitioning the other elements into two sub-arrays, according to whether they are less than or greater than the pivot. The sub-arrays are then sorted recursively. This can be done in-place, requiring small additional amounts of memory to perform the sorting.
+	Quicksort is a comparison sort, meaning that it can sort items of any type for which a 'less-than' relation (formally, a total order) is defined. Efficient implementations of Quicksort are not a stable sort, meaning that the relative order of equal sort items is not preserved.
+	Mathematical analysis of quicksort shows that, on average, the algorithm takes O[n log n] comparisons to sort n items. In the worst case, it makes O[n2] comparisons, though this behavior is rare.
+	Best solutions can be available!
+	Soon or later they will be available."
+
+	my_str = my_str + my_str
+	my_str = my_str + my_str
 
 	//----- Text Area -----
 	tb := pdf.Box{
-		x: page.media_box.x/page.user_unit + 10
+		x: page.media_box.x / page.user_unit + 10
 		y: 20
-		w: page.media_box.w/page.user_unit - 20
-		h: page.media_box.h/page.user_unit - 20
+		w: page.media_box.w / page.user_unit - 20
+		h: page.media_box.h / page.user_unit - 20
 	}
 
 	// justify align
 	fnt_params.text_align = .justify
 	mut tmp_txt := my_str
 	mut tmp_res := false
-	mut lo_txt  := " "
-	mut last_y  := f32(0)
-	
+	mut lo_txt := ' '
+
 	// set two columns
 	boxes := [
-		pdf.Box{x:tb.x, y:tb.y, w:tb.w/2-10,  h:tb.h-20},
-		pdf.Box{x:tb.x + tb.w/2+5, y:tb.y, w: tb.w/2-10,  h:tb.h-20},
+		pdf.Box{
+			x: tb.x
+			y: tb.y
+			w: tb.w / 2 - 10
+			h: tb.h - 20
+		},
+		pdf.Box{
+			x: tb.x + tb.w / 2 + 5
+			y: tb.y
+			w: tb.w / 2 - 10
+			h: tb.h - 20
+		},
 	]
 
 	for bx in boxes {
 		if lo_txt.len > 0 {
-			tmp_res, lo_txt, last_y  = page.text_box(tmp_txt, bx, fnt_params)
+			tmp_res, lo_txt, _ = page.text_box(tmp_txt, bx, fnt_params)
 			if tmp_res {
 				break
 			}
-			tmp_txt = lo_txt 
-			//println("leftover: [${lo_txt}]")
+			tmp_txt = lo_txt
+			// println("leftover: [${lo_txt}]")
 		}
 	}
-	//println("res: ${tmp_res} left_over: [${lo_txt}]")
+	// println("res: ${tmp_res} left_over: [${lo_txt}]")
 
 	// render the PDF
-	txt := doc.render()
+	txt := doc.render() ?
 
 	// write it to a file
-	os.write_file_array('example03.pdf', txt.buf)
+	os.write_file_array('example03.pdf', txt) ?
 }
 ```
 
