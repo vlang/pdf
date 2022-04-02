@@ -27,7 +27,7 @@ fn main() {
 	mut b := pdf.Obj{
 		id: doc.get_new_id()
 		is_stream: true
-		compress: false
+		compress: true
 	}
 
 	sent := 'This is the first V working PDF!'

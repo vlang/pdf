@@ -338,7 +338,7 @@ fn main() {
 
 ## Text Box
 
-A text box is a page's box where the text is fitted. 
+A text box is a page's box where the text is fitted.
 
 It is an utility function that help write indented text.
 
@@ -380,7 +380,7 @@ fn main() {
 	page_n := doc.create_page(pdf.Page_params{
 		format: 'A4'
 		gen_content_obj: true
-		compress: false
+		compress: true
 	})
 	mut page := &doc.page_list[page_n]
 	page.user_unit = pdf.mm_unit
@@ -472,4 +472,3 @@ fn main() {
 	os.write_file_array('example03.pdf', txt) ?
 }
 ```
-

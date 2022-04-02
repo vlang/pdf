@@ -50,7 +50,7 @@ fn main() {
 		page_n := doc.create_page(pdf.Page_params{
 			format: page_iso_format
 			gen_content_obj: true
-			compress: false
+			compress: true
 		})
 		mut page := &doc.page_list[page_n]
 		page.user_unit = pdf.mm_unit
