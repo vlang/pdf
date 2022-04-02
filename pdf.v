@@ -126,13 +126,6 @@ fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) ?int {
 	// obj ids
 	res_c.write('$o.id $o.ver obj\n'.bytes()) ?
 
-	// txt := o.txt + txt_parts
-
-	// calculate compressed needed buffer
-	// cmp_len := C.compressBound(txt.len)
-	// cmp_len := zlib.compressBound(txt.len)
-	// mut buf := []byte{len: int(cmp_len)}
-
 	// obj fields
 	res_c.write('<< '.bytes()) ?
 	for field in o.fields {
