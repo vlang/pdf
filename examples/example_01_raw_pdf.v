@@ -27,7 +27,7 @@ fn main() {
 	mut content := pdf.Obj{
 		id: doc.get_new_id()
 		is_stream: true
-		compress: false
+		compress: true
 	}
 
 	// Our first string

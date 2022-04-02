@@ -13,22 +13,10 @@ module pdf
 *
 * TODO:
 **********************************************************************/
+import compress.zlib
 import strings
 import math
 // import os
-
-/**********************************************************************
-*
-* miniz library for flatdecode
-* url: https://github.com/richgel999/miniz/
-*
-**********************************************************************/
-#flag -I @VROOT/miniz2.1
-#include "miniz.c"
-#include "miniz.h"
-
-fn C.compressBound(u32) u32
-fn C.compress(byteptr, &u32, charptr, u32) int
 
 /******************************************************************************
 *
@@ -138,30 +126,27 @@ fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) ?int {
 	// obj ids
 	res_c.write('$o.id $o.ver obj\n'.bytes()) ?
 
-	txt := o.txt + txt_parts
+	// txt := o.txt + txt_parts
 
 	// calculate compressed needed buffer
-	cmp_len := C.compressBound(txt.len)
-	mut buf := []byte{len: int(cmp_len)}
+	// cmp_len := C.compressBound(txt.len)
+	// cmp_len := zlib.compressBound(txt.len)
+	// mut buf := []byte{len: int(cmp_len)}
 
 	// obj fields
 	res_c.write('<< '.bytes()) ?
 	for field in o.fields {
 		res_c.write('$field '.bytes()) ?
 	}
+
+	// cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
+	buf := zlib.compress('$o.txt$txt_parts'.bytes()) ?
+
 	// mandatory fields in a compress obj stream
-	res_c.write('/Length $cmp_len'.bytes()) ?
+	res_c.write('/Length $buf.len'.bytes()) ?
 	res_c.write('/Filter/FlateDecode>>\n'.bytes()) ?
 	res_c.write('stream\n'.bytes()) ?
-
-	cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
-
-	if cmp_status == C.MZ_OK {
-		// println("Compressed len ${cmp_len}")
-		res_c.write(buf) ?
-	} else {
-		println('ERROR!: Compress Failed! error: $cmp_status ')
-	}
+	res_c.write(buf) ?
 	res_c.write('\nendstream\n'.bytes()) ?
 	res_c.write('endobj\n'.bytes()) ?
 
