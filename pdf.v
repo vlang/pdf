@@ -37,7 +37,7 @@ pub mut:
 	fields   []string // list of the fields of the obj
 	parts    []string // list of all parts, these are before the txt field
 	txt      string   // raw source content, it is used after the parts
-	raw_data []byte
+	raw_data []u8
 
 	is_stream bool // if true this object is a stream
 	compress  bool // if true the stream will be compressed
@@ -235,14 +235,14 @@ pub fn (mut p Pdf) create_page(params Page_params) int {
 	// set the page format from the format table
 	// if a format is not found check if the box is initatied
 	// else default is ISO A4
-	mut box := page_fmt['A4']
-	if params.format in page_fmt {
+	mut box := pdf.page_fmt['A4']
+	if params.format in pdf.page_fmt {
 		// use a default format
-		box = page_fmt[params.format]
-		box.x *= mm_unit
-		box.y *= mm_unit
-		box.w *= mm_unit
-		box.h *= mm_unit
+		box = pdf.page_fmt[params.format]
+		box.x *= pdf.mm_unit
+		box.y *= pdf.mm_unit
+		box.w *= pdf.mm_unit
+		box.h *= pdf.mm_unit
 	} else {
 		// check if we have a valid media box
 		sum := box.x + box.y + box.w + box.h
@@ -577,7 +577,7 @@ pub fn (mut p Pdf) use_base_font(font_name string) bool {
 		p.obj_list << font_obj
 		p.base_font_used[font_name] = BaseFontRsc{
 			font_name_id: font_name_id
-			obj_id:       font_obj.id
+			obj_id: font_obj.id
 		}
 		return true
 	}
@@ -590,7 +590,7 @@ pub fn (mut p Pdf) use_base_font(font_name string) bool {
 *
 ******************************************************************************/
 // get_jpeg_info get the width,height and number of bit per pixel of a jpeg file
-pub fn get_jpeg_info(data []byte) (int, int, int) {
+pub fn get_jpeg_info(data []u8) (int, int, int) {
 	// cehck for empty
 	if data.len <= 0 {
 		return 0, 0, 0
@@ -617,7 +617,7 @@ pub fn get_jpeg_info(data []byte) (int, int, int) {
 }
 
 // add_jpeg_resource add a jpeg as resource to the pdf
-pub fn (mut p Pdf) add_jpeg_resource(jpeg_data []byte) int {
+pub fn (mut p Pdf) add_jpeg_resource(jpeg_data []u8) int {
 	jpg_n_bit, jpg_w, jpg_h := get_jpeg_info(jpeg_data)
 	mut jpeg_obj := Obj{
 		id: p.get_new_id()
@@ -1005,7 +1005,7 @@ Q
 *
 ******************************************************************************/
 // utf8util_char_len calculate the length in bytes of a utf8 char
-fn utf8util_char_len(b byte) int {
+fn utf8util_char_len(b u8) int {
 	return ((0xe5000000 >> ((b >> 3) & 0x1e)) & 3) + 1
 }
 
