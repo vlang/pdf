@@ -2,14 +2,14 @@ import pdf
 import os
 
 fn main() {
-	mut doc := Pdf{}
+	mut doc := pdf.Pdf{}
 	doc.init()
 
-	page_n := doc.create_page(Page_params{})
+	page_n := doc.create_page(pdf.Page_params{})
 	mut page := &doc.page_list[page_n]
 
 	// add default PDF Courier font, no need to include it
-	mut font_obj := Obj{
+	mut font_obj := pdf.Obj{
 		id: doc.get_new_id()
 	}
 	font_obj.fields << '/Name /F1 /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /MacRomanEncoding'
@@ -24,7 +24,7 @@ fn main() {
 	page.use_jpeg(jpeg_id)
 
 	// create the page Content
-	mut content := Obj{
+	mut content := pdf.Obj{
 		id: doc.get_new_id()
 		is_stream: true
 		compress: true
@@ -55,8 +55,8 @@ fn main() {
 	doc.add_page_obj(mut page, content)
 
 	// render the PDF
-	txt := doc.render()?
+	txt := doc.render() ?
 
 	// write it to a file
-	os.write_file_array('example01.pdf', txt)?
+	os.write_file_array('example01.pdf', txt) ?
 }
