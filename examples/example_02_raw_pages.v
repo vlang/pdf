@@ -3,16 +3,16 @@ import os
 import math
 
 fn main() {
-	mut doc := pdf.Pdf{}
+	mut doc := Pdf{}
 	doc.init()
 
-	page_n := doc.create_page(pdf.Page_params{})
+	page_n := doc.create_page(Page_params{})
 	// println("page index $page_n")
 	mut page := &doc.page_list[page_n]
 	page.set_unit('mm')
 
 	// add font
-	mut font_obj := pdf.Obj{
+	mut font_obj := Obj{
 		id: doc.get_new_id()
 	}
 	font_obj.fields << '/Name /F1 /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /MacRomanEncoding'
@@ -24,7 +24,7 @@ fn main() {
 	page.use_jpeg(jpeg_id)
 
 	// Content
-	mut b := pdf.Obj{
+	mut b := Obj{
 		id: doc.get_new_id()
 		is_stream: true
 		compress: true
@@ -106,7 +106,7 @@ ET
 	doc.add_page_obj(mut page, b)
 
 	// page 2
-	page_2 := doc.create_page(pdf.Page_params{})
+	page_2 := doc.create_page(Page_params{})
 	page = &doc.page_list[page_2]
 	// font used
 	page.resources << '/Font  <<  /F1  $font_obj.id 0 R  >>'
@@ -115,7 +115,7 @@ ET
 	page.use_jpeg(jpeg_id)
 
 	// Content
-	mut b1 := pdf.Obj{
+	mut b1 := Obj{
 		id: doc.get_new_id()
 		is_stream: true
 		compress: false
@@ -134,8 +134,8 @@ ET
 
 	doc.add_page_obj(mut page, b1)
 
-	txt := doc.render() ?
+	txt := doc.render()?
 
 	// write it to a file
-	os.write_file_array('example02.pdf', txt) ?
+	os.write_file_array('example02.pdf', txt)?
 }

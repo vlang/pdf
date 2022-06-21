@@ -5,8 +5,8 @@ const (
 	file_name       = 'alice_in_wonderland'
 
 	page_iso_format = 'A4'
-	pg_fmt          = pdf.page_fmt[page_iso_format]
-	text_box        = pdf.Box{
+	pg_fmt          = page_fmt[page_iso_format]
+	text_box        = Box{
 		x: pg_fmt.x + 30
 		y: 20
 		w: pg_fmt.w - 60
@@ -17,19 +17,19 @@ const (
 fn main() {
 	mut src_txt := os.read_file('data/${file_name}.txt') or { panic(err) }
 
-	mut doc := pdf.Pdf{}
+	mut doc := Pdf{}
 	doc.init()
 
-	mut fnt_params := pdf.Text_params{
+	mut fnt_params := Text_params{
 		font_size: 12
 		font_name: 'Helvetica'
 		text_align: .left
-		s_color: pdf.RGB{
+		s_color: RGB{
 			r: 0
 			g: 0
 			b: 0
 		}
-		f_color: pdf.RGB{
+		f_color: RGB{
 			r: 0
 			g: 0
 			b: 0
@@ -47,13 +47,13 @@ fn main() {
 
 	// render the pages
 	for src_txt.len > 0 {
-		page_n := doc.create_page(pdf.Page_params{
+		page_n := doc.create_page(Page_params{
 			format: page_iso_format
 			gen_content_obj: true
 			compress: true
 		})
 		mut page := &doc.page_list[page_n]
-		page.user_unit = pdf.mm_unit
+		page.user_unit = mm_unit
 		//----- Page text -----
 		tmp_res, lo_txt, _ = page.text_box(src_txt, text_box, fnt_params)
 		src_txt = lo_txt
@@ -66,7 +66,7 @@ fn main() {
 		fnt_params.font_size = 8.0
 		header := '$file_name'
 		fnt_params.text_align = .center
-		page.text_box(header, pdf.Box{
+		page.text_box(header, Box{
 			x: 10
 			y: 12
 			w: pg_fmt.w - 20
@@ -77,7 +77,7 @@ fn main() {
 		fnt_params.font_size = 8.0
 		footer := 'Page ${index + 1} of $doc.page_list.len'
 		fnt_params.text_align = .right
-		page.text_box(footer, pdf.Box{
+		page.text_box(footer, Box{
 			x: 10
 			y: pg_fmt.h - 10
 			w: pg_fmt.w - 30
@@ -88,8 +88,8 @@ fn main() {
 	}
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()?
 
 	// write it to a file
-	os.write_file_array('example05.pdf', txt) ?
+	os.write_file_array('example05.pdf', txt)?
 }

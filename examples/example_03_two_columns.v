@@ -2,28 +2,28 @@ import pdf
 import os
 
 fn main() {
-	mut doc := pdf.Pdf{}
+	mut doc := Pdf{}
 	doc.init()
 
-	page_n := doc.create_page(pdf.Page_params{
+	page_n := doc.create_page(Page_params{
 		format: 'A4'
 		gen_content_obj: true
 		compress: true
 	})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit
+	page.user_unit = mm_unit
 
-	mut fnt_params := pdf.Text_params{
+	mut fnt_params := Text_params{
 		font_size: 22.0
 		font_name: 'Helvetica'
 		render_mode: -1
 		word_spacing: -1
-		s_color: pdf.RGB{
+		s_color: RGB{
 			r: 0
 			g: 0
 			b: 0
 		}
-		f_color: pdf.RGB{
+		f_color: RGB{
 			r: 0
 			g: 0
 			b: 0
@@ -52,7 +52,7 @@ fn main() {
 	my_str = my_str + my_str
 
 	//----- Text Area -----
-	tb := pdf.Box{
+	tb := Box{
 		x: page.media_box.x / page.user_unit + 10
 		y: 20
 		w: page.media_box.w / page.user_unit - 20
@@ -67,13 +67,13 @@ fn main() {
 
 	// set two columns
 	boxes := [
-		pdf.Box{
+		Box{
 			x: tb.x
 			y: tb.y
 			w: tb.w / 2 - 10
 			h: tb.h - 20
 		},
-		pdf.Box{
+		Box{
 			x: tb.x + tb.w / 2 + 5
 			y: tb.y
 			w: tb.w / 2 - 10
@@ -94,8 +94,8 @@ fn main() {
 	// println("res: ${tmp_res} left_over: [${lo_txt}]")
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()?
 
 	// write it to a file
-	os.write_file_array('example03.pdf', txt) ?
+	os.write_file_array('example03.pdf', txt)?
 }

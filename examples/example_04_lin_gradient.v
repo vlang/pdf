@@ -3,28 +3,28 @@ import math
 import os
 
 fn main() {
-	mut doc := pdf.Pdf{}
+	mut doc := Pdf{}
 	doc.init()
 
-	page_n := doc.create_page(pdf.Page_params{
+	page_n := doc.create_page(Page_params{
 		format: 'A4'
 		gen_content_obj: true
 		compress: true
 	})
 	mut page := &doc.page_list[page_n]
-	page.user_unit = pdf.mm_unit
+	page.user_unit = mm_unit
 
-	mut fnt_params := pdf.Text_params{
+	mut fnt_params := Text_params{
 		font_size: 22.0
 		font_name: 'Helvetica'
 		render_mode: -1
 		word_spacing: -1
-		s_color: pdf.RGB{
+		s_color: RGB{
 			r: 0
 			g: 0
 			b: 0
 		}
-		f_color: pdf.RGB{
+		f_color: RGB{
 			r: 0
 			g: 0
 			b: 0
@@ -41,11 +41,11 @@ fn main() {
 	// rgb(83,107,138) V blue 1
 	// rgb(93,135,191) V blue 2
 	angle := 270.0
-	doc.create_linear_gradient_shader('vertical_gradient', pdf.RGB{
+	doc.create_linear_gradient_shader('vertical_gradient', RGB{
 		r: 83 / 255.0
 		g: 107 / 255.0
 		b: 138 / 255.0
-	}, pdf.RGB{
+	}, RGB{
 		r: 93 / 255.0
 		g: 135 / 255.0
 		b: 191 / 255.0
@@ -53,7 +53,7 @@ fn main() {
 	page.use_shader('vertical_gradient')
 
 	// draw  vertical gradient
-	page.push_content(page.draw_gradient_box('vertical_gradient', pdf.Box{
+	page.push_content(page.draw_gradient_box('vertical_gradient', Box{
 		x: 10
 		y: 10
 		w: 10
@@ -61,11 +61,11 @@ fn main() {
 	}, page.media_box.h / page.user_unit - 20 * 2))
 
 	//----- Create gradient for the separator -----
-	doc.create_linear_gradient_shader('sep_grad', pdf.RGB{
+	doc.create_linear_gradient_shader('sep_grad', RGB{
 		r: 83 / 255.0
 		g: 107 / 255.0
 		b: 138 / 255.0
-	}, pdf.RGB{
+	}, RGB{
 		r: 93 / 255.0
 		g: 135 / 255.0
 		b: 191 / 255.0
@@ -73,7 +73,7 @@ fn main() {
 	page.use_shader('sep_grad')
 
 	//----- Text Area -----
-	tb := pdf.Box{
+	tb := Box{
 		x: page.media_box.x / page.user_unit + 30
 		y: 20
 		w: page.media_box.w / page.user_unit - 40
@@ -84,7 +84,7 @@ fn main() {
 	fnt_params.font_size = 6.0
 	header := 'V manual PDF\nBest Header ever!'
 	fnt_params.text_align = .left
-	mut res1, _, mut last_y := page.text_box(header, pdf.Box{
+	mut res1, _, mut last_y := page.text_box(header, Box{
 		x: 10
 		y: 0
 		w: tb.w
@@ -95,7 +95,7 @@ fn main() {
 	fnt_params.font_size = 8.0
 	footer := 'Page 1 of 1\nBest footer ever!'
 	fnt_params.text_align = .right
-	res1, _, last_y = page.text_box(footer, pdf.Box{
+	res1, _, last_y = page.text_box(footer, Box{
 		x: tb.x
 		y: page.media_box.h / page.user_unit - 10
 		w: tb.w
@@ -131,7 +131,7 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 
 	//----- justify align -----
 	fnt_params.text_align = .justify
-	res1, _, last_y = page.text_box(p_txt, pdf.Box{
+	res1, _, last_y = page.text_box(p_txt, Box{
 		x: tb.x
 		y: y_pos
 		w: tb.w
@@ -140,7 +140,7 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 	y_pos = last_y
 
 	//----- Separator ------
-	page.push_content(page.draw_gradient_box('sep_grad', pdf.Box{
+	page.push_content(page.draw_gradient_box('sep_grad', Box{
 		x: tb.x
 		y: y_pos
 		w: tb.w
@@ -150,7 +150,7 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 
 	//----- right align -----
 	fnt_params.text_align = .right
-	res1, _, last_y = page.text_box(p_txt, pdf.Box{
+	res1, _, last_y = page.text_box(p_txt, Box{
 		x: tb.x
 		y: y_pos
 		w: tb.w
@@ -160,7 +160,7 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 
 	//----- left align -----
 	fnt_params.text_align = .left
-	res1, _, last_y = page.text_box(p_txt, pdf.Box{
+	res1, _, last_y = page.text_box(p_txt, Box{
 		x: tb.x
 		y: y_pos
 		w: tb.w
@@ -168,8 +168,8 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 	}, fnt_params)
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()?
 
 	// write it to a file
-	os.write_file_array('example04.pdf', txt) ?
+	os.write_file_array('example04.pdf', txt)?
 }

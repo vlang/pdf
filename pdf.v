@@ -54,7 +54,7 @@ pub fn (o Obj) render_obj(mut res_c strings.Builder) ?int {
 		return o.render_obj_bytes(mut res_c)
 	} else {
 		for txt in o.parts {
-			tmp_txt.write(txt.bytes()) ?
+			tmp_txt.write(txt.bytes())?
 		}
 
 		if o.compress {
@@ -67,81 +67,81 @@ pub fn (o Obj) render_obj(mut res_c strings.Builder) ?int {
 
 fn (o Obj) render_obj_bytes(mut res_c strings.Builder) ?int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes()) ?
+	res_c.write('$o.id $o.ver obj\n'.bytes())?
 
 	// obj fields
-	res_c.write('<< '.bytes()) ?
+	res_c.write('<< '.bytes())?
 	for field in o.fields {
-		res_c.write('$field '.bytes()) ?
+		res_c.write('$field '.bytes())?
 	}
 	if o.txt.len > 0 {
-		res_c.write('/Length $o.raw_data.len'.bytes()) ?
+		res_c.write('/Length $o.raw_data.len'.bytes())?
 	}
-	res_c.write(' >>\n'.bytes()) ?
+	res_c.write(' >>\n'.bytes())?
 	if o.is_stream {
-		res_c.write('stream\n'.bytes()) ?
+		res_c.write('stream\n'.bytes())?
 	}
-	res_c.write(o.raw_data) ?
+	res_c.write(o.raw_data)?
 	if o.is_stream {
-		res_c.write('\nendstream\n'.bytes()) ?
+		res_c.write('\nendstream\n'.bytes())?
 	}
-	res_c.write('\n'.bytes()) ?
+	res_c.write('\n'.bytes())?
 	return int(res_c.len)
 }
 
 fn (o Obj) render_obj_str(mut res_c strings.Builder, txt_parts string) ?int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes()) ?
+	res_c.write('$o.id $o.ver obj\n'.bytes())?
 
 	txt := o.txt + txt_parts
 
 	// obj fields
-	res_c.write('<< '.bytes()) ?
+	res_c.write('<< '.bytes())?
 	for field in o.fields {
-		res_c.write('$field '.bytes()) ?
+		res_c.write('$field '.bytes())?
 	}
 	if o.txt.len > 0 {
-		res_c.write('/Length $txt.len'.bytes()) ?
+		res_c.write('/Length $txt.len'.bytes())?
 	}
-	res_c.write(' >>\n'.bytes()) ?
+	res_c.write(' >>\n'.bytes())?
 
 	// content
 	if o.txt.len > 0 {
 		if o.is_stream {
-			res_c.write('stream\n'.bytes()) ?
+			res_c.write('stream\n'.bytes())?
 		}
-		res_c.write(txt.bytes()) ?
+		res_c.write(txt.bytes())?
 		if o.is_stream {
-			res_c.write('\nendstream'.bytes()) ?
+			res_c.write('\nendstream'.bytes())?
 		}
-		res_c.write('\n'.bytes()) ?
+		res_c.write('\n'.bytes())?
 	}
 
 	// obj end
-	res_c.write('endobj\n\n'.bytes()) ?
+	res_c.write('endobj\n\n'.bytes())?
 	return int(res_c.len)
 }
 
 fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) ?int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes()) ?
+	res_c.write('$o.id $o.ver obj\n'.bytes())?
 
 	// obj fields
-	res_c.write('<< '.bytes()) ?
+	res_c.write('<< '.bytes())?
 	for field in o.fields {
-		res_c.write('$field '.bytes()) ?
+		res_c.write('$field '.bytes())?
 	}
 
 	// cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
-	buf := zlib.compress('$o.txt$txt_parts'.bytes()) ?
+	buf := zlib.compress('$o.txt$txt_parts'.bytes())?
 
 	// mandatory fields in a compress obj stream
-	res_c.write('/Length $buf.len'.bytes()) ?
-	res_c.write('/Filter/FlateDecode>>\n'.bytes()) ?
-	res_c.write('stream\n'.bytes()) ?
-	res_c.write(buf) ?
-	res_c.write('\nendstream\n'.bytes()) ?
-	res_c.write('endobj\n'.bytes()) ?
+	res_c.write('/Length $buf.len'.bytes())?
+	res_c.write('/Filter/FlateDecode>>\n'.bytes())?
+	res_c.write('stream\n'.bytes())?
+	res_c.write(buf)?
+	res_c.write('\nendstream\n'.bytes())?
+	res_c.write('endobj\n'.bytes())?
 
 	return int(res_c.len)
 }
@@ -365,7 +365,7 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 	// save displacement a obj id of the page
 	posi := Posi{res_c.len, obj.id}
 
-	obj.render_obj(mut res_c) ?
+	obj.render_obj(mut res_c)?
 	return posi
 }
 
@@ -470,19 +470,19 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	mut posi := []Posi{}
 	mut rendered := []int{} // rendered ids
 	mut res := strings.new_builder(32768)
-	res.write('%PDF-1.4\n'.bytes()) ? // format
+	res.write('%PDF-1.4\n'.bytes())? // format
 
 	// catalog
 	posi << Posi{res.len, 1}
 	rendered << 1
 	// res.write(p.obj_list[0].render_obj(res))
-	p.obj_list[0].render_obj(mut res) ?
+	p.obj_list[0].render_obj(mut res)?
 
 	// Pages
 	mut pl_obj := p.obj_list[1]
 	mut page_list := strings.new_builder(128)
 	for pg in p.page_list {
-		page_list.write('$pg.page_obj_id 0 R '.bytes()) ?
+		page_list.write('$pg.page_obj_id 0 R '.bytes())?
 	}
 	tmp_str := page_list.str()
 	pl_obj.fields << ' /Kids['
@@ -492,7 +492,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	posi << Posi{res.len, 2}
 	rendered << 2
 	// res.write(pl_obj.render_obj())
-	pl_obj.render_obj(mut res) ?
+	pl_obj.render_obj(mut res)?
 
 	/*
 	// outlines
@@ -501,7 +501,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	*/
 	// render pages
 	for pg in p.page_list {
-		posi_tmp := p.render_page(mut res, pg, pl_obj.id) ?
+		posi_tmp := p.render_page(mut res, pg, pl_obj.id)?
 
 		// save the byte displacement of the page we rendered
 		posi << posi_tmp
@@ -515,28 +515,28 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 		}
 		posi << Posi{res.len, obj.id}
 		rendered << obj.id
-		obj.render_obj(mut res) ?
+		obj.render_obj(mut res)?
 	}
 
 	// render xref
 	start_xref := res.len
-	res.write('xref\n'.bytes()) ?
-	res.write('0 1\n'.bytes()) ?
+	res.write('xref\n'.bytes())?
+	res.write('0 1\n'.bytes())?
 	// res.write("0 ${posi.len+1}\n")
-	res.write('0000000000 65535 f \n'.bytes()) ?
+	res.write('0000000000 65535 f \n'.bytes())?
 
 	for row in posi {
-		res.write('$row.id 1\n'.bytes()) ?
-		res.write('${row.pos:010d} 00000 n \n'.bytes()) ?
+		res.write('$row.id 1\n'.bytes())?
+		res.write('${row.pos:010d} 00000 n \n'.bytes())?
 	}
 
 	// trailer
-	res.write('trailer\n'.bytes()) ?
-	res.write('<</Size ${posi.len + 1}/Root 1 0 R>>\n'.bytes()) ?
+	res.write('trailer\n'.bytes())?
+	res.write('<</Size ${posi.len + 1}/Root 1 0 R>>\n'.bytes())?
 
-	res.write('startxref\n'.bytes()) ?
-	res.write(start_xref.str().bytes()) ?
-	res.write('\n%%EOF\n'.bytes()) ?
+	res.write('startxref\n'.bytes())?
+	res.write(start_xref.str().bytes())?
+	res.write('\n%%EOF\n'.bytes())?
 	return res
 }
 
