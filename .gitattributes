@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.v linguist-language=V
+*.vv linguist-language=V
+*.vsh linguist-language=V
