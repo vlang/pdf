@@ -1,40 +1,130 @@
 module pdf
 import x.ttf
 import os
+import strings
+import compress.zlib
 /******************************************************************************
 *
 * TTF font management
 *
 ******************************************************************************/
 [heap]
-struct TttfFontRsc {
+struct TtfFontRsc {
 pub mut:
+	id_font_file int
+	id_font int
+	id_font_desc int
+
 	tf ttf.TTF_File
 	font_name_id int
+	font_name string
+	full_name string
 
 	pdf_font_id int
 	pdf_font_descriptor_id int
 	pdf_ttffont_file_id int
 
+	flags u16
 	first_char int = 1
-	last_char int = 255
-	widths []int 
+	last_char int
+	widths []int
+	fontbbox []int
+	ascent int
+	descent int
+}
+
+
+fn get_ttf_widths(mut tf ttf.TTF_File) []int {
+	count := tf.glyph_count()
+	mut widths := []int
+	for i in 0..count {
+		x_min, x_max, _, _ := tf.read_glyph_dim(i)
+		widths << (x_max - x_min)
+	}
+	return widths
+}
+
+fn render_ttf_files(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	buf := zlib.compress(tf.tf.buf)?
+	res_c.write("${tf.id_font_file} 0 obj\n".bytes())?
+	res_c.write("<</Lenght1 ${tf.tf.buf.len} /Lenght ${buf.len} /Filter/FlateDecode>>stream\n".bytes())?
+	res_c.write(buf)?
+	res_c.write("\nendstream\nendobj\n".bytes())?
+	return int(res_c.len)
+}
+
+fn render_ttf_font(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	res_c.write("${tf.id_font} 0 obj\n".bytes())?
+	res_c.write("<<
+/Type/Font
+/Name/${tf.font_name}
+/Subtype/TrueType
+/BaseFont/${tf.font_name}
+/Encoding/WinAnsiEncoding
+/FirstChar ${tf.first_char}
+/LastChar ${tf.last_char}
+/Widths${tf.widths}
+/FontDescriptor ${tf.id_font_desc} 0 R
+>>\n
+".bytes())?
+	return int(res_c.len)
+}
+
+fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
+	res_c.write("<<
+/Type/FontDescriptor
+/FontName/${tf.font_name}
+/FontBBox${tf.fontbbox}
+/Flags ${tf.flags}
+/Ascent ${tf.ascent}
+/Descent ${tf.descent}
+/StemV 80
+/ItalicAngle 0
+/FontFile2 ${tf.id_font_file} 0 R
+>>\n
+".bytes())?
+	return int(res_c.len)
 }
 
 pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string) {
-	mut tf_rsc := TttfFontRsc{}
+	mut tf_rsc := TtfFontRsc{}
+	
+	tf_rsc.id_font_file = p.id_count + 1
+	tf_rsc.id_font = p.id_count + 2
+	tf_rsc.id_font_desc = p.id_count + 3
+	p.id_count += 3
+
 	mut tf := ttf.TTF_File{}
 	tf.buf = os.read_bytes(font_path) or { panic(err) }
 	println('TrueTypeFont file [$font_path] len: $tf.buf.len')
 	tf.init()
-	println('Unit per EM: $tf.units_per_em')
 	tf_rsc.tf = tf
 
+	tf_rsc.flags = tf.flags
+	//println("desc:\n${tf}")
+	tf_rsc.fontbbox << int(tf.x_min)
+	tf_rsc.fontbbox << int(tf.y_min)
+	tf_rsc.fontbbox << int(tf.x_max)
+	tf_rsc.fontbbox << int(tf.y_max)
+	// println("FontBBox: ${tf_rsc.fontbbox}")
+	tf_rsc.ascent = tf.ascent
+	tf_rsc.descent = tf.descent
+
+	tf_rsc.widths = tf.get_ttf_widths()
+	tf_rsc.first_char = 1
+	tf_rsc.last_char = tf_rsc.widths.len
+	// println("Widths ${tf_rsc.widths}")
+	tf_rsc.font_name = font_name
+	tf_rsc.full_name = tf.full_name
+
 	p.ttf_font_used[font_name] = tf_rsc
+
+	//tf_rsc.render_font() or {println("Error")}
 }
 
 /*
-pub fn (mut p TttfFontRsc) render_object() string {
+pub fn (mut p TtfFontRsc) render_object() string {
 	return "
 ${pdf_font_id} 0 obj
 <<

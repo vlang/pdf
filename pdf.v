@@ -347,6 +347,11 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 		obj.fields << '/Font  <<  /F$x.font_name_id  $x.obj_id 0 R  >> '
 	}
 
+	// add the TTF fonts
+	for name, tf in p.ttf_font_used {
+		obj.fields << '/Font  <<  /$name  ${tf.id_font} 0 R  >> '
+	}
+
 	//" /Shading << /Sh_${name} ${index} 0 R >> "
 	// shaders
 	if pg.shaders.len > 0 {
@@ -388,7 +393,7 @@ pub mut:
 	obj_list       []Obj  = []Obj{} // list of all the object sof the pdf
 	page_list      []Page = []Page{} // list of all the pages struct, these are not the page Objects of the pdf
 	base_font_used map[string]BaseFontRsc // contains all the base font used in the pdf
-	ttf_font_used map[string]TttfFontRsc  // contains all the ttf font used in the pdf
+	ttf_font_used map[string]TtfFontRsc  // contains all the ttf font used in the pdf
 	id_count       int // id used to count the added obj
 	// utility data
 	u_to_glyph_table map[string]string // map from unicode to postscritpp glyph
@@ -474,10 +479,12 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	mut rendered := []int{} // rendered ids
 	mut res := strings.new_builder(32768)
 	res.write('%PDF-1.4\n'.bytes())? // format
+	mut count := 1
 
 	// catalog
-	posi << Posi{res.len, 1}
-	rendered << 1
+	posi << Posi{res.len, count}
+	rendered << count
+	count++
 	// res.write(p.obj_list[0].render_obj(res))
 	p.obj_list[0].render_obj(mut res)?
 
@@ -492,8 +499,9 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	pl_obj.fields << tmp_str
 	pl_obj.fields << ']'
 	pl_obj.fields << ' /Count $p.page_list.len'
-	posi << Posi{res.len, 2}
-	rendered << 2
+	posi << Posi{res.len, count}
+	rendered << count
+	count++
 	// res.write(pl_obj.render_obj())
 	pl_obj.render_obj(mut res)?
 
@@ -502,6 +510,24 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	res.write(p.obj_list[2].render_obj())
 	rendered << 3
 	*/
+	
+	// TTF Fonts
+	for k, tf_rsc in p.ttf_font_used {
+		println("Rendering font [${k}]")
+		render_ttf_files(mut res, tf_rsc) or { eprintln("Font file render failed!")}
+		posi << Posi{res.len, tf_rsc.id_font_file}
+		rendered << tf_rsc.id_font_file
+		
+		render_ttf_font(mut res, tf_rsc) or { eprintln("Font render failed!")}
+		posi << Posi{res.len, tf_rsc.id_font}
+		rendered << tf_rsc.id_font
+
+		render_ttf_font_decriptor(mut res, tf_rsc) or { eprintln("Font descriptor render failed!")}
+		posi << Posi{res.len, tf_rsc.id_font}
+		rendered << tf_rsc.id_font
+	}
+
+
 	// render pages
 	for pg in p.page_list {
 		posi_tmp := p.render_page(mut res, pg, pl_obj.id)?
