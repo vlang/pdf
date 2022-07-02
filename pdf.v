@@ -374,11 +374,13 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 * PDF struct
 *
 ******************************************************************************/
-// used to matain the base font iformation in order to write the used resources for every page in the pdf
+// used to mantain the base font iformation in order to write the used resources for every page in the pdf
 struct BaseFontRsc {
 	font_name_id int
 	obj_id       int
 }
+
+
 
 [heap]
 pub struct Pdf {
@@ -386,6 +388,7 @@ pub mut:
 	obj_list       []Obj  = []Obj{} // list of all the object sof the pdf
 	page_list      []Page = []Page{} // list of all the pages struct, these are not the page Objects of the pdf
 	base_font_used map[string]BaseFontRsc // contains all the base font used in the pdf
+	ttf_font_used map[string]TttfFontRsc  // contains all the ttf font used in the pdf
 	id_count       int // id used to count the added obj
 	// utility data
 	u_to_glyph_table map[string]string // map from unicode to postscritpp glyph
