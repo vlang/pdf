@@ -568,6 +568,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	}
 
 	// render xref
+	// TODO: do a better dorting, now it is very scarce!!
 	start_xref := res.len
 	res.write('xref\n'.bytes())?
 	res.write('0 1\n'.bytes())?
@@ -586,12 +587,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 			}
 		}
 	}
-/*
-	for row in posi {
-		res.write('$row.id 1\n'.bytes())?
-		res.write('${row.pos:010d} 00000 n \n'.bytes())?
-	}
-*/
+
 	// trailer
 	res.write('trailer\n'.bytes())?
 	res.write('<</Size ${posi.len + 1}/Root 1 0 R>>\n'.bytes())?

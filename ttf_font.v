@@ -73,7 +73,7 @@ endobj\n
 ".bytes())?
 	return int(res_c.len)
 }
-// /Widths${tf.widths}
+// /Widths${widths}
 
 fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
@@ -127,9 +127,10 @@ pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string) {
 	tf_rsc.ascent = tf.ascent
 	tf_rsc.descent = tf.descent
 
-	tf_rsc.widths = tf.get_ttf_widths()
-	tf_rsc.first_char = 1
-	tf_rsc.last_char = tf_rsc.widths.len
+	tf_rsc.widths,tf_rsc.first_char,tf_rsc.last_char  = tf.get_ttf_widths()
+	//tf_rsc.first_char = 1
+	//tf_rsc.last_char = tf_rsc.widths.len
+	
 	//println("Widths ${tf_rsc.widths.len} :${tf_rsc.widths}")
 	tf_rsc.font_name = font_name
 	tf_rsc.full_name = tf.full_name
