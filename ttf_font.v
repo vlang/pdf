@@ -34,26 +34,29 @@ pub mut:
 }
 
 
+/*
 fn get_ttf_widths(mut tf ttf.TTF_File) []int {
 	count := tf.glyph_count()
 	mut widths := []int
 	for i in 0..count {
 		x_min, x_max, _, _ := tf.read_glyph_dim(i)
-		widths << (x_max - x_min)
+		widths << (x_max - x_min) * 0
 	}
 	return widths
 }
+*/
 
 fn render_ttf_files(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	buf := zlib.compress(tf.tf.buf)?
 	res_c.write("${tf.id_font_file} 0 obj\n".bytes())?
 	res_c.write("<</Lenght1 ${tf.tf.buf.len} /Lenght ${buf.len} /Filter/FlateDecode>>stream\n".bytes())?
 	res_c.write(buf)?
-	res_c.write("\nendstream\nendobj\n".bytes())?
+	res_c.write("\nendstream\nendobj\n\n".bytes())?
 	return int(res_c.len)
 }
 
 fn render_ttf_font(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	widths := pdf_format_width(tf.widths)?
 	res_c.write("${tf.id_font} 0 obj\n".bytes())?
 	res_c.write("<<
 /Type/Font
@@ -63,12 +66,14 @@ fn render_ttf_font(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 /Encoding/WinAnsiEncoding
 /FirstChar ${tf.first_char}
 /LastChar ${tf.last_char}
-/Widths${tf.widths}
 /FontDescriptor ${tf.id_font_desc} 0 R
->>\n
+/Widths${widths}
+>>
+endobj\n
 ".bytes())?
 	return int(res_c.len)
 }
+// /Widths${tf.widths}
 
 fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
@@ -82,9 +87,20 @@ fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 /StemV 80
 /ItalicAngle 0
 /FontFile2 ${tf.id_font_file} 0 R
->>\n
+>>
+endobj\n
 ".bytes())?
 	return int(res_c.len)
+}
+
+fn pdf_format_width(w []int) ?string {
+	mut bs := strings.new_builder(4096)
+	bs.write("[".bytes())?
+	for x in w {
+		bs.write(" $x".bytes())?
+	}
+	bs.write(" ]".bytes())?
+	return bs.str()
 }
 
 pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string) {
@@ -114,7 +130,7 @@ pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string) {
 	tf_rsc.widths = tf.get_ttf_widths()
 	tf_rsc.first_char = 1
 	tf_rsc.last_char = tf_rsc.widths.len
-	// println("Widths ${tf_rsc.widths}")
+	//println("Widths ${tf_rsc.widths.len} :${tf_rsc.widths}")
 	tf_rsc.font_name = font_name
 	tf_rsc.full_name = tf.full_name
 

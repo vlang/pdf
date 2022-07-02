@@ -342,6 +342,7 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 		obj.fields << rsrc
 	}
 
+/*
 	// add the base fonts in use to each the page resources
 	for _, x in p.base_font_used {
 		obj.fields << '/Font  <<  /F$x.font_name_id  $x.obj_id 0 R  >> '
@@ -350,6 +351,24 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 	// add the TTF fonts
 	for name, tf in p.ttf_font_used {
 		obj.fields << '/Font  <<  /$name  ${tf.id_font} 0 R  >> '
+	}
+*/
+
+	// add the base fonts in use to each the page resources
+	if p.base_font_used.len + p.ttf_font_used.len > 0 {		
+		mut txt := "/Font  <<"
+		// add the base fonts in use to each the page resources
+		for _, x in p.base_font_used {
+			txt += '/F$x.font_name_id  $x.obj_id 0 R '
+		}
+		// add the TTF fonts
+		for name, tf in p.ttf_font_used {
+			txt += '/$name ${tf.id_font} 0 R '
+		}
+
+		txt += ">>"
+	
+		obj.fields <<  txt
 	}
 
 	//" /Shading << /Sh_${name} ${index} 0 R >> "
@@ -514,17 +533,18 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	// TTF Fonts
 	for k, tf_rsc in p.ttf_font_used {
 		println("Rendering font [${k}]")
-		render_ttf_files(mut res, tf_rsc) or { eprintln("Font file render failed!")}
+		
 		posi << Posi{res.len, tf_rsc.id_font_file}
 		rendered << tf_rsc.id_font_file
-		
+		render_ttf_files(mut res, tf_rsc) or { eprintln("Font file render failed!")}
+				
+		posi << Posi{res.len, tf_rsc.id_font}
+		rendered << tf_rsc.id_font
 		render_ttf_font(mut res, tf_rsc) or { eprintln("Font render failed!")}
-		posi << Posi{res.len, tf_rsc.id_font}
-		rendered << tf_rsc.id_font
 
+		posi << Posi{res.len, tf_rsc.id_font_desc}
+		rendered << tf_rsc.id_font_desc
 		render_ttf_font_decriptor(mut res, tf_rsc) or { eprintln("Font descriptor render failed!")}
-		posi << Posi{res.len, tf_rsc.id_font}
-		rendered << tf_rsc.id_font
 	}
 
 
@@ -554,11 +574,24 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	// res.write("0 ${posi.len+1}\n")
 	res.write('0000000000 65535 f \n'.bytes())?
 
+	mut ids := posi.map(int(it.id))
+	ids.sort()
+
+	for x in ids {
+		for row in posi {
+			if row.id == x {
+				res.write('$row.id 1\n'.bytes())?
+				res.write('${row.pos:010d} 00000 n \n'.bytes())?
+				break
+			}
+		}
+	}
+/*
 	for row in posi {
 		res.write('$row.id 1\n'.bytes())?
 		res.write('${row.pos:010d} 00000 n \n'.bytes())?
 	}
-
+*/
 	// trailer
 	res.write('trailer\n'.bytes())?
 	res.write('<</Size ${posi.len + 1}/Root 1 0 R>>\n'.bytes())?
