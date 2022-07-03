@@ -759,6 +759,13 @@ pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params)
 	x1 := x * pg.user_unit
 	y1 := pg.media_box.h - (y * pg.user_unit)
 
+	mut font_id := "F1" 
+	if params.font_name in pg.pdf.ttf_font_used {
+		font_id = params.font_name
+	} else {
+		font_id = "F${pg.pdf.base_font_used[params.font_name].font_name_id}"
+	}
+
 	redender_mode := if params.render_mode >= 0 { '$params.render_mode Tr\n' } else { '' }
 	word_spacing := if params.word_spacing > 0 {
 		'${params.word_spacing * pg.user_unit} Tw\n'
@@ -786,7 +793,7 @@ pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params)
 
 	return '
 BT
-/F${pg.pdf.base_font_used[params.font_name].font_name_id} $params.font_size Tf
+/${font_id} $params.font_size Tf
 $stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}($txt) Tj
 ET
 '
@@ -1118,29 +1125,62 @@ pub fn (pg Page) calc_string_bb(txt string, params Text_params) (f32, f32, f32) 
 	} else {
 		f32(0.0)
 	}
-	// println("space_scale: ${space_scale}")
-	for {
-		ch, len := get_uchar(txt, index)
-		glyph := pg.pdf.u_to_glyph_table[ch.str()]
-		w_glyph := base_font_metrics[params.font_name][glyph]
-		// println("$ch $len $glyph [$w_glyph]")
-		w += w_glyph
-		// manage space_scale for the space char
-		if len == 1 && ch == 0x20 {
-			w_s += space_scale
-		}
-		index += len
-		if index > txt.len {
-			break
-		}
-	}
 
 	mult := (params.font_size) / (1000.0 * pg.user_unit)
-	width := f32(w) * mult + (w_s / pg.user_unit)
 
-	ascender := f32(base_font_params[params.font_name]['Ascender']) * mult
-	descender := f32(base_font_params[params.font_name]['Descender']) * mult
+	// println("space_scale: ${space_scale}")
+	mut width := f32(0)
+	mut ascender := f32(0) 
+	mut descender := f32(0)
+	if params.font_name in pg.pdf.ttf_font_used {
+		ft_rsc := pg.pdf.ttf_font_used[params.font_name]
+		for {
+			ch, len := get_uchar(txt, index)
+			w_index := ch-ft_rsc.first_char
+			mut w_glyph := 0
+			if  w_index >= 0 && w_index < ft_rsc.widths.len {
+				// println("Found: ${ch:c} => ${ft_rsc.widths[w_index]}")
+				w_glyph = ft_rsc.widths[w_index]
+			} else {
+				// println("Not found: ${ch:c}")
+			}
+			w += w_glyph
+			// manage space_scale for the space char
+			if len == 1 && ch == 0x20 {
+				w_s += space_scale
+			}
+			index += len
+			if index > txt.len {
+				break
+			}
+		}
 
+		ascender = f32(ft_rsc.ascent) * mult
+		descender = f32(ft_rsc.descent) * mult
+	} else {
+		for {
+			ch, len := get_uchar(txt, index)
+			glyph := pg.pdf.u_to_glyph_table[ch.str()]
+			w_glyph := base_font_metrics[params.font_name][glyph]
+			// println("$ch $len $glyph [$w_glyph]")
+			w += w_glyph
+			// manage space_scale for the space char
+			if len == 1 && ch == 0x20 {
+				w_s += space_scale
+			}
+			index += len
+			if index > txt.len {
+				break
+			}
+		}
+		ascender = f32(base_font_params[params.font_name]['Ascender']) * mult
+		descender = f32(base_font_params[params.font_name]['Descender']) * mult
+	}
+	
+	width = f32(w) * mult + (w_s / pg.user_unit)
+
+	
+	
 	return width, ascender, descender
 }
 

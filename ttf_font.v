@@ -49,7 +49,7 @@ fn get_ttf_widths(mut tf ttf.TTF_File) []int {
 fn render_ttf_files(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	buf := zlib.compress(tf.tf.buf)?
 	res_c.write("${tf.id_font_file} 0 obj\n".bytes())?
-	res_c.write("<</Lenght1 ${tf.tf.buf.len} /Lenght ${buf.len} /Filter/FlateDecode>>stream\n".bytes())?
+	res_c.write("<</Lenght1 ${tf.tf.buf.len} /Lenght ${buf.len+1} /Filter/FlateDecode>>stream\n".bytes())?
 	res_c.write(buf)?
 	res_c.write("\nendstream\nendobj\n\n".bytes())?
 	return int(res_c.len)
