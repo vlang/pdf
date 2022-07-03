@@ -62,7 +62,7 @@ fn render_ttf_font(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 /Type/Font
 /Name/${tf.font_name}
 /Subtype/TrueType
-/BaseFont/${tf.font_name}
+/BaseFont/${tf.full_name}
 /Encoding/WinAnsiEncoding
 /FirstChar ${tf.first_char}
 /LastChar ${tf.last_char}
@@ -79,7 +79,7 @@ fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
 	res_c.write("<<
 /Type/FontDescriptor
-/FontName/${tf.font_name}
+/FontName/${tf.full_name}
 /FontBBox${tf.fontbbox}
 /Flags ${tf.flags}
 /Ascent ${tf.ascent}
@@ -103,15 +103,16 @@ fn pdf_format_width(w []int) ?string {
 	return bs.str()
 }
 
-pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string) {
+pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string, width_scale f32) {
 	mut tf_rsc := TtfFontRsc{}
-	
+
 	tf_rsc.id_font_file = p.id_count + 1
 	tf_rsc.id_font = p.id_count + 2
 	tf_rsc.id_font_desc = p.id_count + 3
 	p.id_count += 3
 
 	mut tf := ttf.TTF_File{}
+	tf.width_scale = width_scale
 	tf.buf = os.read_bytes(font_path) or { panic(err) }
 	println('TrueTypeFont file [$font_path] len: $tf.buf.len')
 	tf.init()
