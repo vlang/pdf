@@ -520,7 +520,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	mut posi := []Posi{}
 	mut rendered := []int{} // rendered ids
 	mut res := strings.new_builder(32768)
-	res.write('%PDF-1.7\n'.bytes())? // format
+	res.write('%PDF-1.4\n'.bytes())? // format
 	res.write('%äüöß\n\n'.bytes())? // format
 	mut count := 1
 

@@ -49,20 +49,25 @@ fn get_ttf_widths(mut tf ttf.TTF_File) []int {
 fn render_ttf_files(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	buf := zlib.compress(tf.tf.buf)?
 	res_c.write("${tf.id_font_file} 0 obj\n".bytes())?
-	res_c.write("<</Lenght1 ${tf.tf.buf.len} /Lenght ${buf.len+1} /Filter/FlateDecode>>stream\n".bytes())?
+	
+	// mandatory fields in a compress obj stream
+	res_c.write('<</Lenght1 ${tf.tf.buf.len} /Length ${buf.len+1} /Filter/FlateDecode>>\n'.bytes())?
+	res_c.write('stream\n'.bytes())?
 	res_c.write(buf)?
-	res_c.write("\nendstream\nendobj\n\n".bytes())?
+	res_c.write('\nendstream\n'.bytes())?
+	res_c.write('endobj\n\n'.bytes())?
 	return int(res_c.len)
 }
 
 fn render_ttf_font(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 	widths := pdf_format_width(tf.widths)?
+	full_name := tf.full_name.replace(' ', '_')
 	res_c.write("${tf.id_font} 0 obj\n".bytes())?
 	res_c.write("<<
 /Type/Font
 /Name/${tf.font_name}
 /Subtype/TrueType
-/BaseFont/${tf.full_name}
+/BaseFont/${full_name}
 /Encoding/WinAnsiEncoding
 /FirstChar ${tf.first_char}
 /LastChar ${tf.last_char}
@@ -76,11 +81,13 @@ endobj\n
 // /Widths${widths}
 
 fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	full_name := tf.full_name.replace(' ', '_')
+	fontbbox := pdf_format_width(tf.fontbbox)?
 	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
 	res_c.write("<<
 /Type/FontDescriptor
-/FontName/${tf.full_name}
-/FontBBox${tf.fontbbox}
+/FontName/${full_name}
+/FontBBox${fontbbox}
 /Flags ${tf.flags}
 /Ascent ${tf.ascent}
 /Descent ${tf.descent}
