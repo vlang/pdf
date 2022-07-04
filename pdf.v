@@ -102,7 +102,7 @@ fn (o Obj) render_obj_str(mut res_c strings.Builder, txt_parts string) ?int {
 		res_c.write('$field '.bytes())?
 	}
 	if o.txt.len > 0 {
-		res_c.write('/Length $txt.len'.bytes())?
+		res_c.write('/Length1 $txt.len/Length $txt.len'.bytes())?
 	}
 	res_c.write(' >>\n'.bytes())?
 
@@ -134,9 +134,11 @@ fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) ?int {
 	}
 
 	// cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
-	buf := zlib.compress('$o.txt$txt_parts'.bytes())?
+	txt_buf := '$o.txt$txt_parts'
+	buf := zlib.compress(txt_buf.bytes())?
 
 	// mandatory fields in a compress obj stream
+	res_c.write('/Length1 $txt_buf.len'.bytes())?
 	res_c.write('/Length $buf.len'.bytes())?
 	res_c.write('/Filter/FlateDecode>>\n'.bytes())?
 	res_c.write('stream\n'.bytes())?
@@ -339,6 +341,8 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 
 	// resources
 	obj.fields << '/Resources  <<  /ProcSet  [/PDF/ImageB/ImageC/ImageI/Text] '
+	// Color space
+	obj.fields << '/Group<</S/Transparency/CS/DeviceRGB/I true>>'
 	for rsrc in pg.resources {
 		obj.fields << rsrc
 	}
