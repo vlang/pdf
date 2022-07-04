@@ -85,7 +85,8 @@ fn (o Obj) render_obj_bytes(mut res_c strings.Builder) ?int {
 	if o.is_stream {
 		res_c.write('\nendstream\n'.bytes())?
 	}
-	res_c.write('\n'.bytes())?
+	// obj end
+	res_c.write('endobj\n\n'.bytes())?
 	return int(res_c.len)
 }
 
@@ -433,6 +434,7 @@ pub fn (mut p Pdf) init() {
 	}
 	cat.fields << '/Type /Catalog'
 	cat.fields << '/Pages  2 0 R'
+	//cat.fields << '/Metadata  3 0 R'
 	// cat.fields << "/Outlines  3 0 R"
 	p.obj_list << cat
 
@@ -443,7 +445,28 @@ pub fn (mut p Pdf) init() {
 	pindx.fields << '/Type /Pages'
 	p.obj_list << pindx
 	p.id_count = 2
+/*
+	// Metadata
+	mut metadata := Obj{
+		id: 3
+	}
 
+	metadata_str := '<?xpacket begin="ï»¿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.1.1">
+	<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+		<rdf:Description rdf:about=""
+				xmlns:xap="http://ns.adobe.com/xap/1.0/">
+			<xap:ModifyDate>2022-07-04T23:09:34+02:00</xap:ModifyDate>
+		</rdf:Description>
+	</rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>'
+	metadata.fields << '/Type /Metadata /Subtype /XML /Length ${metadata_str.len}'
+	metadata.raw_data = metadata_str.bytes()
+	metadata.is_stream = true
+	p.obj_list << metadata
+	p.id_count = 3
+*/
 	/*
 	// outlines id 3
 	mut outlines := Obj{id:3}
@@ -497,7 +520,8 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	mut posi := []Posi{}
 	mut rendered := []int{} // rendered ids
 	mut res := strings.new_builder(32768)
-	res.write('%PDF-1.4\n'.bytes())? // format
+	res.write('%PDF-1.7\n'.bytes())? // format
+	res.write('%äüöß\n\n'.bytes())? // format
 	mut count := 1
 
 	// catalog
@@ -572,7 +596,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	start_xref := res.len
 	res.write('xref\n'.bytes())?
 	res.write('0 1\n'.bytes())?
-	// res.write("0 ${posi.len+1}\n")
+	//res.write('0 ${posi.len + 1}\n'.bytes())?
 	res.write('0000000000 65535 f \n'.bytes())?
 
 	mut ids := posi.map(int(it.id))
@@ -583,6 +607,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 			if row.id == x {
 				res.write('$row.id 1\n'.bytes())?
 				res.write('${row.pos:010d} 00000 n \n'.bytes())?
+				//res.write('${row.pos:010d} 00000 n\r\n'.bytes())?
 				break
 			}
 		}
@@ -590,7 +615,7 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 
 	// trailer
 	res.write('trailer\n'.bytes())?
-	res.write('<</Size ${posi.len + 1}/Root 1 0 R>>\n'.bytes())?
+	res.write('<</Size ${posi.len + 1}/Root 1 0 R /ID [<00000000000000000000000000000000> <00000000000000000000000000000000>]>>\n'.bytes())?
 
 	res.write('startxref\n'.bytes())?
 	res.write(start_xref.str().bytes())?
