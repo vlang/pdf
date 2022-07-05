@@ -671,6 +671,14 @@ pub fn (mut p Pdf) use_base_font(font_name string) bool {
 	return false
 }
 
+pub fn (mut p Pdf) get_base_font_id(font_name string) string {
+	mut res := ''
+	if font_name in p.base_font_used {
+		res = "F${p.base_font_used[font_name].font_name_id}"
+	}
+	return res
+}
+
 /******************************************************************************
 *
 * JPEG resources
