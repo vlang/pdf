@@ -81,6 +81,10 @@ endobj\n
 // /Widths${widths}
 
 fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
+	mut panose := ""
+	for p_val in tf.tf.panose_array {
+		panose += "${p_val} "
+	}
 	full_name := tf.full_name.replace(' ', '_')
 	fontbbox := pdf_format_width(tf.fontbbox)?
 	res_c.write("${tf.id_font_desc} 0 obj\n".bytes())?
@@ -94,6 +98,7 @@ fn render_ttf_font_decriptor(mut res_c strings.Builder, tf TtfFontRsc) ?int {
 /StemV 80
 /ItalicAngle 0
 /FontFile2 ${tf.id_font_file} 0 R
+/Style <<  /Panose  < ${panose} > >>
 >>
 endobj\n
 ".bytes())?
