@@ -23,43 +23,43 @@ fn main() {
 
 	// Raw PDF usage
 	content.txt = '
-        % our first string printed with TTF fonts
-        q'
+		% our first string printed with TTF fonts
+		q'
 
-    mut count := 0
-    for _, v in doc.ttf_font_used {
-    	
-    	content.txt += "
-    	BT    
-        /${v.font_name} 20 Tf
-        10 ${780 - 20 * count} Td
-        (Prova Font ${v.font_name} #!=> Ancora di nuovo!!) Tj
-        ET
-        "
-        count++
+	mut count := 0
+	for _, v in doc.ttf_font_used {
+		
+		content.txt += "
+		BT    
+		/${v.font_name} 20 Tf
+		10 ${780 - 20 * count} Td
+		(Prova Font ${v.font_name} #!=> Ancora di nuovo!!) Tj
+		ET
+		"
+		count++
 
-        content.txt += "
-    	BT    
-        /${v.font_name} 20 Tf
-        10 ${780 - 20 * count} Td
-        (AAAAA ${v.font_name} #!=> Again PDF for V tests!!) Tj
-        ET
-        "
+		content.txt += "
+		BT    
+		/${v.font_name} 20 Tf
+		10 ${780 - 20 * count} Td
+		(AAAAA ${v.font_name} #!=> Again PDF for V tests!!) Tj
+		ET
+		"
 
-        count++
-    }
+		count++
+	}
 
-    content.compress = true
-    // add the page Object to the PDF
+	content.compress = true
+	// add the page Object to the PDF
 	doc.add_page_obj(mut page, content)
 
 
 	//*************
 	// Page 2
 	//*************
-    // simplified font usage
+	// simplified font usage
 
-    page_n1 := doc.create_page(pdf.Page_params{
+	page_n1 := doc.create_page(pdf.Page_params{
 		format: 'A4'
 		gen_content_obj: true
 		compress: false
@@ -67,7 +67,7 @@ fn main() {
 	page = &doc.page_list[page_n1]
 	page.user_unit = pdf.mm_unit
 
-    mut fnt_params := pdf.Text_params{
+	mut fnt_params := pdf.Text_params{
 		font_size: 14.0
 		font_name: 'SA'
 		s_color: pdf.RGB{
