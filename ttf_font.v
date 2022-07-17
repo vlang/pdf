@@ -126,7 +126,7 @@ pub fn (mut p Pdf) load_ttf_font(font_path string, font_name string, width_scale
 	mut tf := ttf.TTF_File{}
 	tf.width_scale = width_scale
 	tf.buf = os.read_bytes(font_path) or { panic(err) }
-	println('TrueTypeFont file [$font_path] len: $tf.buf.len')
+	// println('TrueTypeFont file [$font_path] len: $tf.buf.len')
 	tf.init()
 	tf_rsc.tf = tf
 

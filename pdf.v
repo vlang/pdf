@@ -559,8 +559,8 @@ pub fn (mut p Pdf) render() ?strings.Builder {
 	*/
 	
 	// TTF Fonts
-	for k, tf_rsc in p.ttf_font_used {
-		println("Rendering font [${k}]")
+	for _, tf_rsc in p.ttf_font_used {
+		// println("Rendering font [${k}]")
 		
 		posi << Posi{res.len, tf_rsc.id_font_file}
 		rendered << tf_rsc.id_font_file
