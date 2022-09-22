@@ -12,7 +12,7 @@ fn main() {
 	mut font_obj := pdf.Obj{
 		id: doc.get_new_id()
 	}
-	font_name := 'Courier'
+	font_name := 'Helvetica'
 	font_obj.fields << '/Name /F1 /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /MacRomanEncoding'
 	doc.obj_list << font_obj
 	page.resources << '/Font  <<  /F1  $font_obj.id 0 R  >>'

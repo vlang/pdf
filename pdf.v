@@ -836,6 +836,54 @@ ET
 '
 }
 
+// draw_unicode_text draw a simple unicode string at the x,y coordinates with the text parameters params.
+// The string is composed by the bytes of the utf8 chars:
+// '€ABC' must be written as the following string '80 41 42 43'
+// The conversion in sequence of bystes as string is up to the user
+pub fn (pg Page) draw_unicode_text(in_txt string, x f32, y f32, params Text_params) string {
+	x1 := x * pg.user_unit
+	y1 := pg.media_box.h - (y * pg.user_unit)
+
+	mut font_id := "F1" 
+	if params.font_name in pg.pdf.ttf_font_used {
+		font_id = params.font_name
+	} else {
+		font_id = "F${pg.pdf.base_font_used[params.font_name].font_name_id}"
+	}
+
+	redender_mode := if params.render_mode >= 0 { '$params.render_mode Tr\n' } else { '' }
+	word_spacing := if params.word_spacing > 0 {
+		'${params.word_spacing * pg.user_unit} Tw\n'
+	} else {
+		''
+	}
+	txt_matrix := if params.tm00 != 0.0 {
+		'$params.tm00 $params.tm01 $params.tm10 $params.tm11 $x1 $y1 Tm\n'
+	} else {
+		'$x1 $y1 Td\n'
+	}
+
+	stroke_color := if params.s_color.r < 0 {
+		''
+	} else {
+		'$params.s_color.r $params.s_color.g $params.s_color.b RG '
+	}
+	fill_color := if params.f_color.r < 0 {
+		''
+	} else {
+		'$params.f_color.r $params.f_color.g $params.f_color.b rg '
+	}
+
+	txt := clean_pdf_string(in_txt)
+
+	return '
+BT
+/${font_id} $params.font_size Tf
+$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[<$txt>]TJ
+ET
+'
+}
+
 // calc_word_spacing calculate the sapcing to add to the space char 0x20 to fill the row only if txt fill al least half of teh horizontal space of the box.w
 pub fn (pg Page) calc_word_spacing(txt string, in_box Box, in_params Text_params) f32 {
 	mut params := in_params
