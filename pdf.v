@@ -831,7 +831,7 @@ pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params)
 	return '
 BT
 /${font_id} $params.font_size Tf
-$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}($txt) Tj
+$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[($txt)]TJ
 ET
 '
 }
