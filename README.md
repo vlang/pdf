@@ -8,7 +8,7 @@ From wikipedia:
 
 PDF is a commonly used file format, but producing a PDF file is not a simple task.
 
-This module was created to simplify PDF file creation using the [V programming langauge](https://vlang.io/).
+This module was created to simplify PDF file creation using the [V programming language](https://vlang.io/).
 
 **vPDF** is structured in two layers, low and high.
 
