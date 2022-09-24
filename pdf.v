@@ -781,7 +781,7 @@ pub fn (mut pg Page) new_line_offset(fnt_params Text_params) f32 {
 	return f32(fnt_params.font_size + fnt_params.font_size * fnt_params.leading) / pg.user_unit
 }
 
-// clean_string clean form round brackets and backslash for PDF atring standard
+// clean_string clean form round brackets and backslash for PDF string standard
 pub fn clean_pdf_string(txt string) string {
 	return txt.replace_each(['(', '\\(', ')', '\\)', '\\', '\\\\'])
 }
@@ -791,8 +791,7 @@ pub fn (mut tp Text_params) scale(x_scale f32, y_scale f32) {
 	tp.tm11 = y_scale
 }
 
-// draw_base_text draw a simple string at the x,y coordinates with the text parameters params
-pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) string {
+fn (pg Page) get_text_parms(x f32, y f32, params Text_params) (string,string,string,string,string,string) {
 	x1 := x * pg.user_unit
 	y1 := pg.media_box.h - (y * pg.user_unit)
 
@@ -826,62 +825,44 @@ pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params)
 		'$params.f_color.r $params.f_color.g $params.f_color.b rg '
 	}
 
-	txt := clean_pdf_string(in_txt)
+	return font_id, redender_mode, word_spacing, txt_matrix, stroke_color, fill_color
+}
+
+// draw_raw_text draw a simple raw string at the x,y coordinates with the text parameters params.
+// The string is passed directly to the 'TJ' pdf command without filtering.
+// To draw a simple string you must write it  (your text) with round brackets around the text.
+// For further information have a look af the PDF standard for TJ command
+pub fn (pg Page) draw_raw_text(in_txt string, x f32, y f32, params Text_params) string {
+	font_id, redender_mode, word_spacing, 
+	txt_matrix, stroke_color, fill_color := pg.get_text_parms(x , y, params)
 
 	return '
 BT
 /${font_id} $params.font_size Tf
-$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[($txt)]TJ
+$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[${in_txt}]TJ
 ET
 '
 }
+// draw_base_text draw a simple string at the x,y coordinates with the text parameters params
+// optional you can use PDF Literal string 3-byte UTF-8 BOM: (\357\273\277 ... )
+pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) string {
+	return pg.draw_raw_text('(${clean_pdf_string(in_txt)})', x , y, params)
+}
 
-// draw_unicode_text draw a simple unicode string at the x,y coordinates with the text parameters params.
+
+// draw_unicode_text draw a simple raw string at the x,y coordinates with the text parameters params.
 // The string is composed by the bytes of the utf8 chars:
 // '€ABC' must be written as the following string '80 41 42 43'
 // The conversion in sequence of bystes as string is up to the user
 pub fn (pg Page) draw_unicode_text(in_txt string, x f32, y f32, params Text_params) string {
-	x1 := x * pg.user_unit
-	y1 := pg.media_box.h - (y * pg.user_unit)
+	mut res := strings.new_builder(in_txt.len * 3 + 2)
 
-	mut font_id := "F1" 
-	if params.font_name in pg.pdf.ttf_font_used {
-		font_id = params.font_name
-	} else {
-		font_id = "F${pg.pdf.base_font_used[params.font_name].font_name_id}"
+	res.write_string('<')
+	for byte_val in in_txt.bytes() {
+		res.write_string(' ${byte_val:02X}') 
 	}
-
-	redender_mode := if params.render_mode >= 0 { '$params.render_mode Tr\n' } else { '' }
-	word_spacing := if params.word_spacing > 0 {
-		'${params.word_spacing * pg.user_unit} Tw\n'
-	} else {
-		''
-	}
-	txt_matrix := if params.tm00 != 0.0 {
-		'$params.tm00 $params.tm01 $params.tm10 $params.tm11 $x1 $y1 Tm\n'
-	} else {
-		'$x1 $y1 Td\n'
-	}
-
-	stroke_color := if params.s_color.r < 0 {
-		''
-	} else {
-		'$params.s_color.r $params.s_color.g $params.s_color.b RG '
-	}
-	fill_color := if params.f_color.r < 0 {
-		''
-	} else {
-		'$params.f_color.r $params.f_color.g $params.f_color.b rg '
-	}
-
-	txt := clean_pdf_string(in_txt)
-
-	return '
-BT
-/${font_id} $params.font_size Tf
-$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[<$txt>]TJ
-ET
-'
+	res.write_string(' >')
+	return pg.draw_raw_text(res.str(), x, y, params)
 }
 
 // calc_word_spacing calculate the sapcing to add to the space char 0x20 to fill the row only if txt fill al least half of teh horizontal space of the box.w

@@ -1,6 +1,7 @@
 import pdf
 import os
 
+[console]
 fn main() {
 	mut doc := pdf.Pdf{}
 	doc.init()
@@ -40,14 +41,19 @@ fn main() {
 
 	// write the string plus € symbol using an octal codepoint
 	// for the font Graduate-Regular.ttf in the data folder
-	// using the ISO-8859-1 Latin1 codification of chars
-	// € is 0x80 or 0o200 or 128 in decimal
+	// that use the ISO-8859-1 Latin1 codification of chars
+	// € is 0x80 or 0o200 or 128 in decimal.
+	// In PDF you can indicate the codepoint in octal code using the `\`
+	// backslash before the octal value of the char
 	page.push_content(page.draw_base_text('Test string. Euro symbol: \200', 10, 10, fnt_params))
 
-	// write €ABC
-	page.push_content(page.draw_unicode_text('80 41 42 43', 10, 32, fnt_params))
+	// write €ABC using hex value of the chars, 3-byte UTF-8 BOM
+	page.push_content(page.draw_raw_text('<80 41 42 43>', 10, 32, fnt_params))
 
-
+	// write the string as unicode bytes in the pdf
+	e := "ciao \200"
+	page.push_content(page.draw_unicode_text(e, 10, 52, fnt_params))
+	
 	// render the PDF
 	txt := doc.render() ?
 

@@ -5,4 +5,5 @@ examples/example_04_lin_gradient
 examples/example_05_simple_book
 examples/example_06_simple_pdf
 examples/example_07_jpeg
-
+examples/example_08_ttf_font
+examples/example_09_simple_ttf_font
