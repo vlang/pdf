@@ -47,7 +47,7 @@ fn get_ttf_widths(mut tf ttf.TTF_File) []int {
 */
 
 fn render_ttf_files(mut res_c strings.Builder, tf TtfFontRsc) !int {
-	buf := zlib.compress(tf.tf.buf)!
+	buf := zlib.compress(tf.tf.buf) or { return error('compress failed') }
 	res_c.write("${tf.id_font_file} 0 obj\n".bytes())!
 	
 	// mandatory fields in a compress obj stream
