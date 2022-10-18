@@ -135,7 +135,7 @@ fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) !int {
 
 	// cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
 	txt_buf := '$o.txt$txt_parts'
-	buf := zlib.compress(txt_buf.bytes())!
+	buf := zlib.compress(txt_buf.bytes()) or { return error('compress failed') }
 
 	// mandatory fields in a compress obj stream
 	res_c.write('/Length1 $txt_buf.len'.bytes())!
