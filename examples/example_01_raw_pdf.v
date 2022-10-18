@@ -80,8 +80,8 @@ fn main() {
 	doc.add_page_obj(mut page, content)
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example01.pdf', txt) ?
+	os.write_file_array('example01.pdf', txt)!
 }

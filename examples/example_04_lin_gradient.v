@@ -168,8 +168,8 @@ Quicksort is a comparison sort, meaning that it can sort items of any type for w
 	}, fnt_params)
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example04.pdf', txt) ?
+	os.write_file_array('example04.pdf', txt)!
 }

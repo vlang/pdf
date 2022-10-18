@@ -94,8 +94,8 @@ fn main() {
 	// println("res: ${tmp_res} left_over: [${lo_txt}]")
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example03.pdf', txt) ?
+	os.write_file_array('example03.pdf', txt)!
 }
