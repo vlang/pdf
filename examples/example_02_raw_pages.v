@@ -134,8 +134,8 @@ ET
 
 	doc.add_page_obj(mut page, b1)
 
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example02.pdf', txt) ?
+	os.write_file_array('example02.pdf', txt)!
 }

@@ -55,8 +55,8 @@ fn main() {
 	}))
 
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example07.pdf', txt) ?
+	os.write_file_array('example07.pdf', txt)!
 }

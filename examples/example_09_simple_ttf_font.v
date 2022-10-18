@@ -55,8 +55,8 @@ fn main() {
 	page.push_content(page.draw_unicode_text(e, 10, 52, fnt_params))
 	
 	// render the PDF
-	txt := doc.render() ?
+	txt := doc.render()!
 
 	// write it to a file
-	os.write_file_array('example09.pdf', txt) ?
+	os.write_file_array('example09.pdf', txt)!
 }
