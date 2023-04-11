@@ -197,7 +197,7 @@ pub const (
 
 pub struct Page {
 pub mut:
-	pdf               &Pdf = &Pdf(0) // PDF, page owner
+	pdf               &Pdf = &Pdf(unsafe { nil }) // PDF, page owner
 	content_obj_index int  = -1 // content object index
 	page_obj_id       int      // obj id of the page
 	obj_id_list       []int    // list of the page object
