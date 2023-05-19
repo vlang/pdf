@@ -1049,26 +1049,26 @@ endobj
 endobj
 */
 
-pub fn (mut pdf Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, angle f32) int {
+pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, angle f32) int {
 	// FunctionType 2
 	mut f2_obj := Obj{
-		id: pdf.get_new_id()
+		id: p.get_new_id()
 		is_stream: false
 	}
 	f2_obj.fields << ' /FunctionType 2 /Domain [0 1] /C0 [$c1.r $c1.g $c1.b] /C1 [$c2.r $c2.g $c2.b] /N 1 '
-	pdf.obj_list << f2_obj
+	p.obj_list << f2_obj
 
 	// FunctionType 3
 	mut f3_obj := Obj{
-		id: pdf.get_new_id()
+		id: p.get_new_id()
 		is_stream: false
 	}
 	f3_obj.fields << ' /FunctionType 3 /Domain [0 1] /Functions [$f2_obj.id 0 R] /Bounds [] /Encode [0 1] '
-	pdf.obj_list << f3_obj
+	p.obj_list << f3_obj
 
 	// ShadingType 2
 	mut s2_obj := Obj{
-		id: pdf.get_new_id()
+		id: p.get_new_id()
 		is_stream: false
 	}
 	/*
@@ -1081,16 +1081,16 @@ pub fn (mut pdf Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, 
 	grad_cs := math.cos(angle)
 	s2_obj.fields << ' /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 $grad_cs $grad_sn] /Domain [0 1] /Function
 	$f3_obj.id 0 R /Extend [true true] '
-	pdf.obj_list << s2_obj
+	p.obj_list << s2_obj
 
 	// shader obj
 	mut shader_obj := Obj{
-		id: pdf.get_new_id()
+		id: p.get_new_id()
 		is_stream: false
 	}
 	shader_obj.fields << ' /Type /Pattern /PatternType 2 /Shading $s2_obj.id 0 R '
 	shader_obj.name = name
-	pdf.obj_list << shader_obj
+	p.obj_list << shader_obj
 	return shader_obj.id
 }
 
