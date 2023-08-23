@@ -564,15 +564,24 @@ pub fn (mut p Pdf) render() !strings.Builder {
 		
 		posi << Posi{res.len, tf_rsc.id_font_file}
 		rendered << tf_rsc.id_font_file
-		render_ttf_files(mut res, tf_rsc) or { eprintln("Font file render failed!")}
+		render_ttf_files(mut res, tf_rsc) or {
+			eprintln("Font file render failed!")
+			continue
+		}
 				
 		posi << Posi{res.len, tf_rsc.id_font}
 		rendered << tf_rsc.id_font
-		render_ttf_font(mut res, tf_rsc) or { eprintln("Font render failed!")}
+		render_ttf_font(mut res, tf_rsc) or {
+			eprintln("Font render failed!")
+			continue
+		}
 
 		posi << Posi{res.len, tf_rsc.id_font_desc}
 		rendered << tf_rsc.id_font_desc
-		render_ttf_font_decriptor(mut res, tf_rsc) or { eprintln("Font descriptor render failed!")}
+		render_ttf_font_decriptor(mut res, tf_rsc) or {
+			eprintln("Font descriptor render failed!")
+			continue
+		}
 	}
 
 
