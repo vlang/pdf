@@ -67,15 +67,15 @@ pub fn (o Obj) render_obj(mut res_c strings.Builder) !int {
 
 fn (o Obj) render_obj_bytes(mut res_c strings.Builder) !int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes())!
+	res_c.write('${o.id} ${o.ver} obj\n'.bytes())!
 
 	// obj fields
 	res_c.write('<< '.bytes())!
 	for field in o.fields {
-		res_c.write('$field '.bytes())!
+		res_c.write('${field} '.bytes())!
 	}
 	if o.txt.len > 0 {
-		res_c.write('/Length $o.raw_data.len'.bytes())!
+		res_c.write('/Length ${o.raw_data.len}'.bytes())!
 	}
 	res_c.write(' >>\n'.bytes())!
 	if o.is_stream {
@@ -92,17 +92,17 @@ fn (o Obj) render_obj_bytes(mut res_c strings.Builder) !int {
 
 fn (o Obj) render_obj_str(mut res_c strings.Builder, txt_parts string) !int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes())!
+	res_c.write('${o.id} ${o.ver} obj\n'.bytes())!
 
 	txt := o.txt + txt_parts
 
 	// obj fields
 	res_c.write('<< '.bytes())!
 	for field in o.fields {
-		res_c.write('$field '.bytes())!
+		res_c.write('${field} '.bytes())!
 	}
 	if o.txt.len > 0 {
-		res_c.write('/Length1 $txt.len/Length $txt.len'.bytes())!
+		res_c.write('/Length1 ${txt.len}/Length ${txt.len}'.bytes())!
 	}
 	res_c.write(' >>\n'.bytes())!
 
@@ -125,21 +125,21 @@ fn (o Obj) render_obj_str(mut res_c strings.Builder, txt_parts string) !int {
 
 fn (o Obj) render_obj_cmpr(mut res_c strings.Builder, txt_parts string) !int {
 	// obj ids
-	res_c.write('$o.id $o.ver obj\n'.bytes())!
+	res_c.write('${o.id} ${o.ver} obj\n'.bytes())!
 
 	// obj fields
 	res_c.write('<< '.bytes())!
 	for field in o.fields {
-		res_c.write('$field '.bytes())!
+		res_c.write('${field} '.bytes())!
 	}
 
 	// cmp_status := C.compress(buf.data, &cmp_len, charptr(txt.str), u32(txt.len))
-	txt_buf := '$o.txt$txt_parts'
+	txt_buf := '${o.txt}${txt_parts}'
 	buf := zlib.compress(txt_buf.bytes()) or { return error('compress failed') }
 
 	// mandatory fields in a compress obj stream
-	res_c.write('/Length1 $txt_buf.len'.bytes())!
-	res_c.write('/Length $buf.len'.bytes())!
+	res_c.write('/Length1 ${txt_buf.len}'.bytes())!
+	res_c.write('/Length ${buf.len}'.bytes())!
 	res_c.write('/Filter/FlateDecode>>\n'.bytes())!
 	res_c.write('stream\n'.bytes())!
 	res_c.write(buf)!
@@ -164,7 +164,7 @@ pub mut:
 }
 
 fn (box Box) str() string {
-	return '$box.x $box.y $box.w $box.h'
+	return '${box.x} ${box.y} ${box.w} ${box.h}'
 }
 
 pub const (
@@ -329,11 +329,11 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 	obj_id := p.get_obj_index_by_id(pg.page_obj_id)
 	mut obj := p.obj_list[obj_id]
 	obj.fields << '/Type /Page'
-	obj.fields << '/Parent $parent_id 0 R'
+	obj.fields << '/Parent ${parent_id} 0 R'
 
 	// obj.fields << "/UserUnit ${pg.user_unit}" // default 1/72 of inch
-	obj.fields << '/MediaBox  [ $pg.media_box.str() ]'
-	obj.fields << '/CropBox   [ $pg.crop_box.str() ]'
+	obj.fields << '/MediaBox  [ ${pg.media_box.str()} ]'
+	obj.fields << '/CropBox   [ ${pg.crop_box.str()} ]'
 
 	for field in pg.fields {
 		obj.fields << field
@@ -347,7 +347,7 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 		obj.fields << rsrc
 	}
 
-/*
+	/*
 	// add the base fonts in use to each the page resources
 	for _, x in p.base_font_used {
 		obj.fields << '/Font  <<  /F$x.font_name_id  $x.obj_id 0 R  >> '
@@ -357,23 +357,23 @@ pub fn (mut p Pdf) render_page(mut res_c strings.Builder, pg Page, parent_id int
 	for name, tf in p.ttf_font_used {
 		obj.fields << '/Font  <<  /$name  ${tf.id_font} 0 R  >> '
 	}
-*/
+	*/
 
 	// add the base fonts in use to each the page resources
-	if p.base_font_used.len + p.ttf_font_used.len > 0 {		
-		mut txt := "/Font  <<"
+	if p.base_font_used.len + p.ttf_font_used.len > 0 {
+		mut txt := '/Font  <<'
 		// add the base fonts in use to each the page resources
 		for _, x in p.base_font_used {
-			txt += '/F$x.font_name_id  $x.obj_id 0 R '
+			txt += '/F${x.font_name_id}  ${x.obj_id} 0 R '
 		}
 		// add the TTF fonts
 		for name, tf in p.ttf_font_used {
-			txt += '/$name ${tf.id_font} 0 R '
+			txt += '/${name} ${tf.id_font} 0 R '
 		}
 
-		txt += ">>"
-	
-		obj.fields <<  txt
+		txt += '>>'
+
+		obj.fields << txt
 	}
 
 	//" /Shading << /Sh_${name} ${index} 0 R >> "
@@ -409,15 +409,13 @@ struct BaseFontRsc {
 	obj_id       int
 }
 
-
-
 [heap]
 pub struct Pdf {
 pub mut:
 	obj_list       []Obj  = []Obj{} // list of all the object sof the pdf
 	page_list      []Page = []Page{} // list of all the pages struct, these are not the page Objects of the pdf
 	base_font_used map[string]BaseFontRsc // contains all the base font used in the pdf
-	ttf_font_used map[string]TtfFontRsc  // contains all the ttf font used in the pdf
+	ttf_font_used  map[string]TtfFontRsc  // contains all the ttf font used in the pdf
 	id_count       int // id used to count the added obj
 	// utility data
 	u_to_glyph_table map[string]string // map from unicode to postscritpp glyph
@@ -438,7 +436,7 @@ pub fn (mut p Pdf) init() {
 	}
 	cat.fields << '/Type /Catalog'
 	cat.fields << '/Pages  2 0 R'
-	//cat.fields << '/Metadata  3 0 R'
+	// cat.fields << '/Metadata  3 0 R'
 	// cat.fields << "/Outlines  3 0 R"
 	p.obj_list << cat
 
@@ -449,7 +447,7 @@ pub fn (mut p Pdf) init() {
 	pindx.fields << '/Type /Pages'
 	p.obj_list << pindx
 	p.id_count = 2
-/*
+	/*
 	// Metadata
 	mut metadata := Obj{
 		id: 3
@@ -470,7 +468,7 @@ pub fn (mut p Pdf) init() {
 	metadata.is_stream = true
 	p.obj_list << metadata
 	p.id_count = 3
-*/
+	*/
 	/*
 	// outlines id 3
 	mut outlines := Obj{id:3}
@@ -539,13 +537,13 @@ pub fn (mut p Pdf) render() !strings.Builder {
 	mut pl_obj := p.obj_list[1]
 	mut page_list := strings.new_builder(128)
 	for pg in p.page_list {
-		page_list.write('$pg.page_obj_id 0 R '.bytes())!
+		page_list.write('${pg.page_obj_id} 0 R '.bytes())!
 	}
 	tmp_str := page_list.str()
 	pl_obj.fields << ' /Kids['
 	pl_obj.fields << tmp_str
 	pl_obj.fields << ']'
-	pl_obj.fields << ' /Count $p.page_list.len'
+	pl_obj.fields << ' /Count ${p.page_list.len}'
 	posi << Posi{res.len, count}
 	rendered << count
 	count++
@@ -557,24 +555,23 @@ pub fn (mut p Pdf) render() !strings.Builder {
 	res.write(p.obj_list[2].render_obj())
 	rendered << 3
 	*/
-	
+
 	// TTF Fonts
 	for _, tf_rsc in p.ttf_font_used {
 		// println("Rendering font [${k}]")
-		
+
 		posi << Posi{res.len, tf_rsc.id_font_file}
 		rendered << tf_rsc.id_font_file
-		render_ttf_files(mut res, tf_rsc) or { eprintln("Font file render failed!")}
-				
+		render_ttf_files(mut res, tf_rsc) or { eprintln('Font file render failed!') }
+
 		posi << Posi{res.len, tf_rsc.id_font}
 		rendered << tf_rsc.id_font
-		render_ttf_font(mut res, tf_rsc) or { eprintln("Font render failed!")}
+		render_ttf_font(mut res, tf_rsc) or { eprintln('Font render failed!') }
 
 		posi << Posi{res.len, tf_rsc.id_font_desc}
 		rendered << tf_rsc.id_font_desc
-		render_ttf_font_decriptor(mut res, tf_rsc) or { eprintln("Font descriptor render failed!")}
+		render_ttf_font_decriptor(mut res, tf_rsc) or { eprintln('Font descriptor render failed!') }
 	}
-
 
 	// render pages
 	for pg in p.page_list {
@@ -600,7 +597,7 @@ pub fn (mut p Pdf) render() !strings.Builder {
 	start_xref := res.len
 	res.write('xref\n'.bytes())!
 	res.write('0 1\n'.bytes())!
-	//res.write('0 ${posi.len + 1}\n'.bytes())!
+	// res.write('0 ${posi.len + 1}\n'.bytes())!
 	res.write('0000000000 65535 f \n'.bytes())!
 
 	mut ids := posi.map(int(it.id))
@@ -609,9 +606,9 @@ pub fn (mut p Pdf) render() !strings.Builder {
 	for x in ids {
 		for row in posi {
 			if row.id == x {
-				res.write('$row.id 1\n'.bytes())!
+				res.write('${row.id} 1\n'.bytes())!
 				res.write('${row.pos:010d} 00000 n \n'.bytes())!
-				//res.write('${row.pos:010d} 00000 n\r\n'.bytes())!
+				// res.write('${row.pos:010d} 00000 n\r\n'.bytes())!
 				break
 			}
 		}
@@ -660,7 +657,7 @@ pub fn (mut p Pdf) use_base_font(font_name string) bool {
 		// for now we use the array position as index
 		font_name_id := p.base_font_used.len
 
-		font_obj.fields << '/Name /F$font_name_id /Type /Font /Subtype /Type1 /BaseFont /$font_name /Encoding /MacRomanEncoding'
+		font_obj.fields << '/Name /F${font_name_id} /Type /Font /Subtype /Type1 /BaseFont /${font_name} /Encoding /MacRomanEncoding'
 		p.obj_list << font_obj
 		p.base_font_used[font_name] = BaseFontRsc{
 			font_name_id: font_name_id
@@ -674,7 +671,7 @@ pub fn (mut p Pdf) use_base_font(font_name string) bool {
 pub fn (mut p Pdf) get_base_font_id(font_name string) string {
 	mut res := ''
 	if font_name in p.base_font_used {
-		res = "F${p.base_font_used[font_name].font_name_id}"
+		res = 'F${p.base_font_used[font_name].font_name_id}'
 	}
 	return res
 }
@@ -718,7 +715,7 @@ pub fn (mut p Pdf) add_jpeg_resource(jpeg_data []u8) int {
 		id: p.get_new_id()
 		is_stream: true
 	}
-	jpeg_obj.fields << '/Type/XObject/Subtype/Image /Width $jpg_w /Height $jpg_h /BitsPerComponent $jpg_n_bit /ColorSpace/DeviceRGB/Filter/DCTDecode/Length $jpeg_data.len'
+	jpeg_obj.fields << '/Type/XObject/Subtype/Image /Width ${jpg_w} /Height ${jpg_h} /BitsPerComponent ${jpg_n_bit} /ColorSpace/DeviceRGB/Filter/DCTDecode/Length ${jpeg_data.len}'
 	jpeg_obj.raw_data = jpeg_data
 	p.obj_list << jpeg_obj
 	return jpeg_obj.id
@@ -726,7 +723,7 @@ pub fn (mut p Pdf) add_jpeg_resource(jpeg_data []u8) int {
 
 // use_jpeg specify that the jpeg with jpeg_id is used in the page
 pub fn (mut p Page) use_jpeg(jpeg_id int) {
-	p.resources << '/XObject<</Image$jpeg_id $jpeg_id 0 R>>'
+	p.resources << '/XObject<</Image${jpeg_id} ${jpeg_id} 0 R>>'
 }
 
 pub fn (mut pg Page) draw_jpeg(jpeg_id int, bx Box) string {
@@ -737,8 +734,8 @@ pub fn (mut pg Page) draw_jpeg(jpeg_id int, bx Box) string {
 
 	return '
 q
-$w 0 0 $h $x $y cm
-/Image$jpeg_id Do
+${w} 0 0 ${h} ${x} ${y} cm
+/Image${jpeg_id} Do
 Q
 '
 }
@@ -795,34 +792,34 @@ fn (pg Page) get_text_parms(x f32, y f32, params Text_params) (string, string, s
 	x1 := x * pg.user_unit
 	y1 := pg.media_box.h - (y * pg.user_unit)
 
-	mut font_id := "F1" 
+	mut font_id := 'F1'
 	if params.font_name in pg.pdf.ttf_font_used {
 		font_id = params.font_name
 	} else {
-		font_id = "F${pg.pdf.base_font_used[params.font_name].font_name_id}"
+		font_id = 'F${pg.pdf.base_font_used[params.font_name].font_name_id}'
 	}
 
-	redender_mode := if params.render_mode >= 0 { '$params.render_mode Tr\n' } else { '' }
+	redender_mode := if params.render_mode >= 0 { '${params.render_mode} Tr\n' } else { '' }
 	word_spacing := if params.word_spacing > 0 {
 		'${params.word_spacing * pg.user_unit} Tw\n'
 	} else {
 		''
 	}
 	txt_matrix := if params.tm00 != 0.0 {
-		'$params.tm00 $params.tm01 $params.tm10 $params.tm11 $x1 $y1 Tm\n'
+		'${params.tm00} ${params.tm01} ${params.tm10} ${params.tm11} ${x1} ${y1} Tm\n'
 	} else {
-		'$x1 $y1 Td\n'
+		'${x1} ${y1} Td\n'
 	}
 
 	stroke_color := if params.s_color.r < 0 {
 		''
 	} else {
-		'$params.s_color.r $params.s_color.g $params.s_color.b RG '
+		'${params.s_color.r} ${params.s_color.g} ${params.s_color.b} RG '
 	}
 	fill_color := if params.f_color.r < 0 {
 		''
 	} else {
-		'$params.f_color.r $params.f_color.g $params.f_color.b rg '
+		'${params.f_color.r} ${params.f_color.g} ${params.f_color.b} rg '
 	}
 
 	return font_id, redender_mode, word_spacing, txt_matrix, stroke_color, fill_color
@@ -833,22 +830,22 @@ fn (pg Page) get_text_parms(x f32, y f32, params Text_params) (string, string, s
 // To draw a simple string you must write it  (your text) with round brackets around the text.
 // For further information have a look af the PDF standard for TJ command
 pub fn (pg Page) draw_raw_text(in_txt string, x f32, y f32, params Text_params) string {
-	font_id, redender_mode, word_spacing, 
-	txt_matrix, stroke_color, fill_color := pg.get_text_parms(x , y, params)
+	font_id, redender_mode, word_spacing, txt_matrix, stroke_color, fill_color := pg.get_text_parms(x,
+		y, params)
 
 	return '
 BT
-/${font_id} $params.font_size Tf
-$stroke_color$fill_color$txt_matrix$redender_mode${word_spacing}[${in_txt}]TJ
+/${font_id} ${params.font_size} Tf
+${stroke_color}${fill_color}${txt_matrix}${redender_mode}${word_spacing}[${in_txt}]TJ
 ET
 '
 }
+
 // draw_base_text draw a simple string at the x,y coordinates with the text parameters params
 // optional you can use PDF Literal string 3-byte UTF-8 BOM: (\357\273\277 ... )
 pub fn (pg Page) draw_base_text(in_txt string, x f32, y f32, params Text_params) string {
-	return pg.draw_raw_text('(${clean_pdf_string(in_txt)})', x , y, params)
+	return pg.draw_raw_text('(${clean_pdf_string(in_txt)})', x, y, params)
 }
-
 
 // draw_unicode_text draw a simple raw string at the x,y coordinates with the text parameters params.
 // The string is composed by the bytes of the utf8 chars:
@@ -859,7 +856,7 @@ pub fn (pg Page) draw_unicode_text(in_txt string, x f32, y f32, params Text_para
 
 	res.write_string('<')
 	for byte_val in in_txt.bytes() {
-		res.write_string(' ${byte_val:02X}') 
+		res.write_string(' ${byte_val:02X}')
 	}
 	res.write_string(' >')
 	return pg.draw_raw_text(res.str(), x, y, params)
@@ -964,7 +961,7 @@ pub fn (mut pg Page) text_box(txt string, in_box Box, in_params Text_params) (bo
 						pg.push_content('0 Tw\n')
 						return false, leftover_text, y
 					}
-					words_list = words_list[l..]
+					words_list = unsafe { words_list[l..] }
 					l = words_list.len
 					continue
 				}
@@ -990,11 +987,11 @@ pub fn (pg Page) draw_rect(b Box) string {
 	y1 := y0 - b.h * pg.user_unit
 
 	rect_txt := '
-$x0 $y0 m
-$x1 $y0 l
-$x1 $y1 l
-$x0 $y1 l
-$x0 $y0 l
+${x0} ${y0} m
+${x1} ${y0} l
+${x1} ${y1} l
+${x0} ${y1} l
+${x0} ${y0} l
 S
 '
 	return rect_txt
@@ -1008,11 +1005,11 @@ pub fn (pg Page) draw_filled_rect(b Box) string {
 	y1 := y0 - b.h * pg.user_unit
 
 	rect_txt := '
-$x0 $y0 m
-$x1 $y0 l
-$x1 $y1 l
-$x0 $y1 l
-$x0 $y0 l
+${x0} ${y0} m
+${x1} ${y0} l
+${x1} ${y1} l
+${x0} ${y1} l
+${x0} ${y0} l
 f
 S
 '
@@ -1055,7 +1052,7 @@ pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, an
 		id: p.get_new_id()
 		is_stream: false
 	}
-	f2_obj.fields << ' /FunctionType 2 /Domain [0 1] /C0 [$c1.r $c1.g $c1.b] /C1 [$c2.r $c2.g $c2.b] /N 1 '
+	f2_obj.fields << ' /FunctionType 2 /Domain [0 1] /C0 [${c1.r} ${c1.g} ${c1.b}] /C1 [${c2.r} ${c2.g} ${c2.b}] /N 1 '
 	p.obj_list << f2_obj
 
 	// FunctionType 3
@@ -1063,7 +1060,7 @@ pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, an
 		id: p.get_new_id()
 		is_stream: false
 	}
-	f3_obj.fields << ' /FunctionType 3 /Domain [0 1] /Functions [$f2_obj.id 0 R] /Bounds [] /Encode [0 1] '
+	f3_obj.fields << ' /FunctionType 3 /Domain [0 1] /Functions [${f2_obj.id} 0 R] /Bounds [] /Encode [0 1] '
 	p.obj_list << f3_obj
 
 	// ShadingType 2
@@ -1079,8 +1076,8 @@ pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, an
 	// rotation angle of the gradient
 	grad_sn := math.sin(angle)
 	grad_cs := math.cos(angle)
-	s2_obj.fields << ' /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 $grad_cs $grad_sn] /Domain [0 1] /Function
-	$f3_obj.id 0 R /Extend [true true] '
+	s2_obj.fields << ' /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0.000000 0.000000 ${grad_cs} ${grad_sn}] /Domain [0 1] /Function
+	${f3_obj.id} 0 R /Extend [true true] '
 	p.obj_list << s2_obj
 
 	// shader obj
@@ -1088,7 +1085,7 @@ pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, an
 		id: p.get_new_id()
 		is_stream: false
 	}
-	shader_obj.fields << ' /Type /Pattern /PatternType 2 /Shading $s2_obj.id 0 R '
+	shader_obj.fields << ' /Type /Pattern /PatternType 2 /Shading ${s2_obj.id} 0 R '
 	shader_obj.name = name
 	p.obj_list << shader_obj
 	return shader_obj.id
@@ -1097,7 +1094,7 @@ pub fn (mut p Pdf) create_linear_gradient_shader(name string, c1 RGB, c2 RGB, an
 pub fn (mut pg Page) use_shader(name string) bool {
 	index := pg.pdf.get_obj_index_by_name(name)
 	if index >= 0 {
-		pg.shaders << '/Sh_$name $index 0 R '
+		pg.shaders << '/Sh_${name} ${index} 0 R '
 		// pg.resources << " /Shading << /Sh_${name} ${index} 0 R >> "
 		return true
 	}
@@ -1123,9 +1120,9 @@ pub fn (mut pg Page) draw_gradient_box(name string, b Box, in_grad_len f32) stri
 	grad_len := in_grad_len * pg.user_unit
 	return '
 q
-$x $y $w ${-h} re W n
-$grad_len 0 0 $grad_len $x $y cm
-/Sh_$name sh
+${x} ${y} ${w} ${-h} re W n
+${grad_len} 0 0 ${grad_len} ${x} ${y} cm
+/Sh_${name} sh
 Q
 '
 }
@@ -1196,15 +1193,15 @@ pub fn (pg Page) calc_string_bb(txt string, params Text_params) (f32, f32, f32) 
 
 	// println("space_scale: ${space_scale}")
 	mut width := f32(0)
-	mut ascender := f32(0) 
+	mut ascender := f32(0)
 	mut descender := f32(0)
 	if params.font_name in pg.pdf.ttf_font_used {
 		ft_rsc := pg.pdf.ttf_font_used[params.font_name]
 		for {
 			ch, len := get_uchar(txt, index)
-			w_index := ch-ft_rsc.first_char
+			w_index := ch - ft_rsc.first_char
 			mut w_glyph := 0
-			if  w_index >= 0 && w_index < ft_rsc.widths.len {
+			if w_index >= 0 && w_index < ft_rsc.widths.len {
 				// println("Found: ${ch:c} => ${ft_rsc.widths[w_index]}")
 				w_glyph = ft_rsc.widths[w_index]
 			} else {
@@ -1242,11 +1239,9 @@ pub fn (pg Page) calc_string_bb(txt string, params Text_params) (f32, f32, f32) 
 		ascender = f32(base_font_params[params.font_name]['Ascender']) * mult
 		descender = f32(base_font_params[params.font_name]['Descender']) * mult
 	}
-	
+
 	width = f32(w) * mult + (w_s / pg.user_unit)
 
-	
-	
 	return width, ascender, descender
 }
 

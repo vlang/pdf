@@ -38,7 +38,7 @@ fn main() {
 
 	// Declare the base (Type1 font) we want use
 	if !doc.use_base_font(fnt_params.font_name) {
-		eprintln('ERROR: Font $fnt_params.font_name not available!')
+		eprintln('ERROR: Font ${fnt_params.font_name} not available!')
 		return
 	}
 
@@ -64,7 +64,7 @@ fn main() {
 		mut page := &doc.page_list[index]
 		//----- Header -----
 		fnt_params.font_size = 8.0
-		header := '$file_name'
+		header := '${file_name}'
 		fnt_params.text_align = .center
 		page.text_box(header, pdf.Box{
 			x: 10
@@ -75,7 +75,7 @@ fn main() {
 
 		//----- Footer -----
 		fnt_params.font_size = 8.0
-		footer := 'Page ${index + 1} of $doc.page_list.len'
+		footer := 'Page ${index + 1} of ${doc.page_list.len}'
 		fnt_params.text_align = .right
 		page.text_box(footer, pdf.Box{
 			x: 10

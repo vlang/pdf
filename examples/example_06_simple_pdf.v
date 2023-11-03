@@ -30,7 +30,7 @@ fn main() {
 
 	// Declare the base (Type1 font) we want use
 	if !doc.use_base_font(fnt_params.font_name) {
-		eprintln('ERROR: Font $fnt_params.font_name not available!')
+		eprintln('ERROR: Font ${fnt_params.font_name} not available!')
 		return
 	}
 

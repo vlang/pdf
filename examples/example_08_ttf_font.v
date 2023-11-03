@@ -18,8 +18,8 @@ fn main() {
 	}
 
 	// add TTF font obj
-	doc.load_ttf_font("data/Graduate-Regular.ttf", "GR", 1.0)
-	doc.load_ttf_font("data/ShelleyAllegro.ttf", "SA", 2.0)
+	doc.load_ttf_font('data/Graduate-Regular.ttf', 'GR', 1.0)
+	doc.load_ttf_font('data/ShelleyAllegro.ttf', 'SA', 2.0)
 
 	// Raw PDF usage
 	content.txt = '
@@ -28,23 +28,22 @@ fn main() {
 
 	mut count := 0
 	for _, v in doc.ttf_font_used {
-		
-		content.txt += "
+		content.txt += '
 		BT    
 		/${v.font_name} 20 Tf
 		10 ${780 - 20 * count} Td
 		(Prova Font ${v.font_name} #!=> Ancora di nuovo!!) Tj
 		ET
-		"
+		'
 		count++
 
-		content.txt += "
+		content.txt += '
 		BT    
 		/${v.font_name} 20 Tf
 		10 ${780 - 20 * count} Td
 		(AAAAA ${v.font_name} #!=> Again PDF for V tests!!) Tj
 		ET
-		"
+		'
 
 		count++
 	}
@@ -52,7 +51,6 @@ fn main() {
 	content.compress = true
 	// add the page Object to the PDF
 	doc.add_page_obj(mut page, content)
-
 
 	//*************
 	// Page 2
@@ -135,9 +133,9 @@ fn main() {
 	}
 
 	/********************************************
-	 * 
+	 *
 	 * Rendering
-	 * 
+	 *
 	 * ******************************************/
 
 	// render the PDF

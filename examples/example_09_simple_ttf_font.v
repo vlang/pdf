@@ -35,7 +35,7 @@ fn main() {
 
 	// Declare the base (Type1 font) we want use
 	if fnt_params.font_name != font_name && !doc.use_base_font(fnt_params.font_name) {
-		eprintln('ERROR: Font $fnt_params.font_name not available!')
+		eprintln('ERROR: Font ${fnt_params.font_name} not available!')
 		return
 	}
 
@@ -51,9 +51,9 @@ fn main() {
 	page.push_content(page.draw_raw_text('<80 41 42 43>', 10, 32, fnt_params))
 
 	// write the string as unicode bytes in the pdf
-	e := "ciao \200"
+	e := 'ciao \200'
 	page.push_content(page.draw_unicode_text(e, 10, 52, fnt_params))
-	
+
 	// render the PDF
 	txt := doc.render()!
 
