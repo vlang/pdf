@@ -10,7 +10,7 @@ import compress.zlib
 * TTF font management
 *
 ******************************************************************************/
-[heap]
+@[heap]
 struct TtfFontRsc {
 pub mut:
 	id_font_file int

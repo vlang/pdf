@@ -167,33 +167,31 @@ fn (box Box) str() string {
 	return '${box.x} ${box.y} ${box.w} ${box.h}'
 }
 
-pub const (
-	// all the formats are expressed in millimeters
-	page_fmt = {
-		// ISO
-		'A0':       Box{0, 0, 841, 1189}
-		'B0':       Box{0, 0, 1000, 1414}
-		'A1':       Box{0, 0, 594, 841}
-		'B1':       Box{0, 0, 707, 1000}
-		'A2':       Box{0, 0, 420, 594}
-		'B2':       Box{0, 0, 500, 707}
-		'A3':       Box{0, 0, 297, 420}
-		'B3':       Box{0, 0, 353, 500}
-		'A4':       Box{0, 0, 210, 297}
-		'B4':       Box{0, 0, 250, 353}
-		'A5':       Box{0, 0, 148, 210}
-		'B5':       Box{0, 0, 176, 250}
-		// american
-		'letter':   Box{0, 0, 216, 279}
-		'legal':    Box{0, 0, 216, 356}
-		'legal jr': Box{0, 0, 203, 127}
-		'tabloid':  Box{0, 0, 279, 432}
-	}
+// all the formats are expressed in millimeters
+pub const page_fmt = {
+	// ISO
+	'A0':       Box{0, 0, 841, 1189}
+	'B0':       Box{0, 0, 1000, 1414}
+	'A1':       Box{0, 0, 594, 841}
+	'B1':       Box{0, 0, 707, 1000}
+	'A2':       Box{0, 0, 420, 594}
+	'B2':       Box{0, 0, 500, 707}
+	'A3':       Box{0, 0, 297, 420}
+	'B3':       Box{0, 0, 353, 500}
+	'A4':       Box{0, 0, 210, 297}
+	'B4':       Box{0, 0, 250, 353}
+	'A5':       Box{0, 0, 148, 210}
+	'B5':       Box{0, 0, 176, 250}
+	// american
+	'letter':   Box{0, 0, 216, 279}
+	'legal':    Box{0, 0, 216, 356}
+	'legal jr': Box{0, 0, 203, 127}
+	'tabloid':  Box{0, 0, 279, 432}
+}
 
-	mm_unit   = 2.83464
-	inch_unit = 72.0
-	pdf_unit  = 1.0 // default for PDF manuals
-)
+pub const mm_unit = 2.83464
+pub const inch_unit = 72.0
+pub const pdf_unit = 1.0 // default for PDF manuals
 
 pub struct Page {
 pub mut:
@@ -409,7 +407,7 @@ struct BaseFontRsc {
 	obj_id       int
 }
 
-[heap]
+@[heap]
 pub struct Pdf {
 pub mut:
 	obj_list       []Obj  = []Obj{} // list of all the object sof the pdf

@@ -1,18 +1,16 @@
 import pdf
 import os
 
-const (
-	file_name       = 'alice_in_wonderland'
+const file_name = 'alice_in_wonderland'
 
-	page_iso_format = 'A4'
-	pg_fmt          = pdf.page_fmt[page_iso_format]
-	text_box        = pdf.Box{
-		x: pg_fmt.x + 30
-		y: 20
-		w: pg_fmt.w - 60
-		h: pg_fmt.h - 40
-	}
-)
+const page_iso_format = 'A4'
+const pg_fmt = pdf.page_fmt[page_iso_format]
+const text_box = pdf.Box{
+	x: pg_fmt.x + 30
+	y: 20
+	w: pg_fmt.w - 60
+	h: pg_fmt.h - 40
+}
 
 fn main() {
 	mut src_txt := os.read_file('data/${file_name}.txt') or { panic(err) }

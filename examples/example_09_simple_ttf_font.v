@@ -1,7 +1,6 @@
 import pdf
 import os
 
-[console]
 fn main() {
 	mut doc := pdf.Pdf{}
 	doc.init()
